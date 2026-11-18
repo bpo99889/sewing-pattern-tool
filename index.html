@@ -288,7 +288,13 @@
           <label class="f">Test square on the pattern
             <select id="sc-expected"><option value="1">1 inch square</option><option value="2">2 inch square</option><option value="3.937">10 cm square</option><option value="1.969">5 cm square</option></select>
           </label>
-          <label class="f">What your ruler says it printed at (inches)<input type="number" id="sc-measured" step="0.01" min="0" placeholder="e.g. 0.94" /></label>
+          <label class="f">What your ruler says it printed at
+            <span style="display:flex; gap:8px; margin-top:5px;">
+              <input type="number" id="sc-measured" step="0.01" min="0" placeholder="e.g. 0.94" style="flex:1; min-width:0; margin-top:0;" />
+              <select id="sc-measured-unit" aria-label="Measured value unit" style="width:auto; flex:none; margin-top:0;"><option value="in">inches</option><option value="cm">cm</option></select>
+            </span>
+            <span class="hint">Pick the unit on your ruler — cm is converted to inches for the calculation.</span>
+          </label>
           <label class="f">A body measurement to check the damage (inches)<span class="hint">Optional — e.g. your waist. Shows what size it would have cut at.</span><input type="number" id="sc-body" step="0.1" min="0" placeholder="e.g. 32" /></label>
         </div>
         <button class="btn" id="sc-run">Calculate the corrected scale</button>
@@ -885,11 +891,28 @@
     });
 
     /* ================= 03 SCALE FIX ================= */
+    (function(){
+      var expEl = $("sc-expected"), unitEl = $("sc-measured-unit"), measEl = $("sc-measured");
+      if (expEl && unitEl){
+        expEl.addEventListener("change", function(){
+          var v = parseFloat(expEl.value);
+          unitEl.value = (v === 3.937 || v === 1.969) ? "cm" : "in";
+          measEl.placeholder = unitEl.value === "cm" ? "e.g. 9.4" : "e.g. 0.94";
+        });
+      }
+      if (unitEl){
+        unitEl.addEventListener("change", function(){
+          measEl.placeholder = unitEl.value === "cm" ? "e.g. 9.4" : "e.g. 0.94";
+        });
+      }
+    })();
     $("sc-run").addEventListener("click", function(){
       var out = $("sc-result");
-      var expected = parseFloat($("sc-expected").value), measured = parseFloat($("sc-measured").value), body = parseFloat($("sc-body").value);
+      var expected = parseFloat($("sc-expected").value), measuredRaw = parseFloat($("sc-measured").value), body = parseFloat($("sc-body").value);
+      var measuredUnit = $("sc-measured-unit") ? $("sc-measured-unit").value : "in";
+      var measured = measuredUnit === "cm" ? measuredRaw / 2.54 : measuredRaw;
       out.className = "result show";
-      if (!measured || measured <= 0){ out.innerHTML = verdict("bad", "Enter your ruler measurement", "Measure the printed test square in inches and type what the ruler actually says — e.g. 0.94."); return; }
+      if (!measuredRaw || measuredRaw <= 0){ out.innerHTML = verdict("bad", "Enter your ruler measurement", "Measure the printed test square and type what the ruler actually says, in the unit you picked — e.g. 0.94 inches or 9.4 cm."); return; }
       var actual = measured / expected * 100, fix = expected / measured * 100, off = Math.abs(100 - actual);
       var html = "";
       if (off <= 1){
