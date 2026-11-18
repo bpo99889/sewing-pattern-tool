@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>Sewing Pattern Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      * { box-sizing: border-box; }
+      :root{
+        --bg:#f3f1ea; --surface:#fffdf8; --surface2:#eceadf; --ink:#1d2420; --ink-soft:#4c554f;
+        --line:#d8d4c6; --pine:#175243; --pine-deep:#0d3a2e; --pine-soft:#dcebe2;
+        --rust:#bc4b1f; --rust-soft:#f7e3d7; --gold:#a87b14; --gold-soft:#f3ead0;
+        --good:#1e7a3c; --good-soft:#e0f0e2; --bad:#b3261e; --bad-soft:#f9e3e0;
+        --radius:10px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#101613; --surface:#182019; --surface2:#1f2a22; --ink:#e8ece7; --ink-soft:#a9b4ab;
+          --line:#33413a; --pine:#3f9c7d; --pine-deep:#0a2720; --pine-soft:#1d352b;
+          --rust:#e07f52; --rust-soft:#3d271c; --gold:#d3a83f; --gold-soft:#38300f;
+          --good:#63c67e; --good-soft:#1d3323; --bad:#ef8a80; --bad-soft:#3c211d;
+        }
+      }
+      html{ scroll-behavior:smooth; }
+      body{ margin:0; background:var(--bg); color:var(--ink);
+        font-family:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif; font-size:16px; line-height:1.55; }
+      .wrap{ max-width:1060px; margin:0 auto; padding:0 18px 64px; }
+      h1,h2,h3{ font-family:"DM Serif Display", Georgia, serif; font-weight:400; line-height:1.15; margin:0; }
+      a{ color:var(--pine); }
+      @media (prefers-color-scheme: dark){ a{ color:#7fc7ab; } }
+
+      /* ---------- intro ---------- */
+      .intro{ background:var(--pine-deep); color:#f2f5ef; margin:0 -18px; padding:34px 18px 30px; }
+      .intro-inner{ max-width:1060px; margin:0 auto; }
+      .intro h1{ font-size:clamp(30px,5.4vw,46px); max-width:16em; }
+      .intro p.lede{ font-size:clamp(16px,2.4vw,19px); color:#cfddd2; max-width:44em; margin:14px 0 0; }
+      .intro .stats{ display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+      .stat{ border:1px solid #3f6a58; border-radius:999px; padding:6px 14px; font-size:14px; color:#e6efe8; }
+      .stat b{ font-family:"DM Mono", monospace; font-weight:500; color:#fff; }
+
+      /* ---------- tool index ---------- */
+      .index{ padding:26px 0 4px; }
+      .index h2{ font-size:22px; margin-bottom:4px; }
+      .index p{ color:var(--ink-soft); margin:0 0 14px; }
+      .index-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px; }
+      .index a{ display:flex; gap:10px; align-items:flex-start; background:var(--surface); border:1px solid var(--line);
+        border-radius:var(--radius); padding:12px 14px; text-decoration:none; color:var(--ink); }
+      .index a:hover{ border-color:var(--pine); }
+      .index .n{ font-family:"DM Mono", monospace; font-size:13px; color:var(--rust); padding-top:2px; }
+      .index .t{ font-weight:700; font-size:15px; display:block; }
+      .index .d{ font-size:13px; color:var(--ink-soft); display:block; }
+
+      /* ---------- tool cards ---------- */
+      section.tool{ background:var(--surface); border:1px solid var(--line); border-radius:14px;
+        padding:24px 22px; margin-top:22px; scroll-margin-top:16px; }
+      .tool-head{ display:flex; gap:14px; align-items:flex-start; margin-bottom:6px; }
+      .tool-num{ font-family:"DM Mono", monospace; background:var(--pine); color:#fff; border-radius:8px;
+        min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:15px; flex:none; }
+      .tool-head h2{ font-size:clamp(22px,3.4vw,28px); }
+      .fixes{ font-size:13px; color:var(--rust); font-weight:700; letter-spacing:.02em; margin-top:3px; }
+      .tool p.why{ color:var(--ink-soft); margin:8px 0 16px; max-width:46em; }
+      blockquote{ margin:0 0 16px; padding:10px 14px; background:var(--surface2); border-radius:8px; font-size:14.5px; }
+      blockquote footer{ font-size:13px; color:var(--ink-soft); margin-top:4px; }
+
+      .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+      @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+      label.f{ display:block; font-size:13.5px; font-weight:700; margin-bottom:12px; }
+      label.f span.hint{ display:block; font-weight:400; color:var(--ink-soft); font-size:12.5px; margin-top:2px; }
+      input[type="number"], input[type="text"], select{ width:100%; margin-top:5px; padding:8px 10px; font:inherit; font-size:15px;
+        background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:8px; }
+      input[type="file"]{ font:inherit; font-size:14px; width:100%; }
+      .btn{ display:inline-block; background:var(--pine); color:#fff; border:0; border-radius:8px; padding:10px 18px;
+        font:inherit; font-weight:700; font-size:15px; cursor:pointer; min-height:44px; }
+      .btn.secondary{ background:var(--surface2); color:var(--ink); border:1px solid var(--line); }
+      .btn:active{ transform:translateY(1px); }
+      .drop{ border:1.5px dashed var(--line); border-radius:10px; padding:18px; background:var(--bg); }
+      .result{ margin-top:16px; border-radius:10px; padding:16px; background:var(--pine-soft); display:none; }
+      .result.show{ display:block; }
+      .result h3{ font-size:19px; margin-bottom:6px; }
+      .result .big{ font-family:"DM Mono", monospace; font-size:clamp(24px,4.5vw,34px); font-weight:500; }
+      .verdict{ border-radius:8px; padding:10px 12px; margin:8px 0; font-size:14.5px; }
+      .verdict.ok{ background:var(--good-soft); }
+      .verdict.warn{ background:var(--gold-soft); }
+      .verdict.bad{ background:var(--bad-soft); }
+      .verdict b{ display:block; }
+      ul.tight{ margin:6px 0; padding-left:20px; }
+      ul.tight li{ margin:3px 0; }
+      .mono{ font-family:"DM Mono", monospace; }
+      table.data{ border-collapse:collapse; width:100%; font-size:14px; margin:10px 0; }
+      table.data th, table.data td{ border:1px solid var(--line); padding:6px 8px; text-align:left; }
+      table.data th{ background:var(--surface2); font-size:13px; }
+      table.data input{ width:64px; padding:4px 6px; font-size:14px; }
+      .scrollx{ overflow-x:auto; }
+      @media (max-width:640px){
+        table.data th, table.data td{ padding:5px 5px; font-size:13px; }
+        table.data input{ width:52px; }
+        #yd-pieces input.yd-name{ width:78px !important; }
+        #yd-pieces input.yd-n{ width:44px !important; }
+      }
+      .note{ font-size:13.5px; color:var(--ink-soft); }
+      .checklist{ list-style:none; margin:10px 0; padding:0; }
+      .checklist li{ padding:8px 12px 8px 34px; position:relative; background:var(--bg); border:1px solid var(--line); border-radius:8px; margin:6px 0; font-size:14.5px; }
+      .checklist li::before{ content:""; position:absolute; left:12px; top:13px; width:12px; height:12px; border:2px solid var(--pine); border-radius:3px; }
+      details{ border:1px solid var(--line); border-radius:8px; padding:4px 14px; margin:8px 0; background:var(--bg); }
+      summary{ cursor:pointer; font-weight:700; padding:8px 0; }
+      input[type="range"]{ width:100%; accent-color:var(--pine); }
+
+      /* assembly grid */
+      .asm-grid{ display:grid; gap:3px; margin:12px 0; max-width:520px; }
+      .asm-cell{ aspect-ratio:1/1.3; background:var(--pine-soft); border:1px solid var(--pine); border-radius:4px;
+        display:flex; align-items:center; justify-content:center; font-family:"DM Mono",monospace; font-size:12px; cursor:pointer; min-height:36px; }
+      .asm-cell.skip{ background:var(--bg); border-color:var(--line); color:var(--ink-soft); text-decoration:line-through; }
+
+      /* calibrator */
+      .cal-stage{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:22px; text-align:center; overflow:auto; }
+      .cal-square{ border:3px solid var(--rust); margin:10px auto; position:relative; }
+      .cal-square span{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:"DM Mono",monospace; font-size:13px; color:var(--rust); }
+
+      /* glossary */
+      .gloss-item{ padding:10px 0; border-bottom:1px solid var(--line); }
+      .gloss-item b{ font-size:15.5px; }
+      .gloss-item p{ margin:2px 0 0; color:var(--ink-soft); font-size:14.5px; }
+
+      /* ---------- new: generator / designer ---------- */
+      .chips{ display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 14px; }
+      .chip{ border:1px solid var(--line); background:var(--bg); color:var(--ink); border-radius:999px; padding:8px 13px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; min-height:40px; }
+      .chip.on{ background:var(--pine); color:#fff; border-color:var(--pine); }
+      .preview-stage{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:14px; overflow:auto; margin-top:12px; }
+      .preview-stage svg{ max-width:100%; height:auto; display:block; margin:0 auto; background:#fff; }
+      @media (prefers-color-scheme: dark){ .preview-stage svg{ background:#f7f5ee; } }
+      .catalogue{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:9px; margin-top:12px; }
+      .cat-card{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:11px 12px; }
+      .cat-card b{ font-size:14.5px; display:block; }
+      .cat-card span{ font-size:12.5px; color:var(--ink-soft); display:block; margin-top:2px; }
+      .cat-card .src{ font-size:11.5px; font-weight:700; color:var(--rust); text-transform:uppercase; letter-spacing:.04em; }
+      .seg{ display:flex; flex-wrap:wrap; gap:0; border:1px solid var(--line); border-radius:8px; overflow:hidden; width:fit-content; max-width:100%; }
+      .seg button{ border:0; border-right:1px solid var(--line); background:var(--bg); color:var(--ink); padding:9px 14px; font:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+      .seg button:last-child{ border-right:0; }
+      .seg button.on{ background:var(--pine); color:#fff; }
+      .spec-sheet{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:14px 16px; font-size:14.5px; }
+      .steps{ counter-reset:step; list-style:none; margin:10px 0; padding:0; }
+      .steps li{ padding:9px 12px 9px 44px; position:relative; background:var(--bg); border:1px solid var(--line); border-radius:8px; margin:6px 0; font-size:14.5px; }
+      .steps li::before{ counter-increment:step; content:counter(step); position:absolute; left:11px; top:8px; width:22px; height:22px; border-radius:50%; background:var(--pine); color:#fff; font-family:"DM Mono",monospace; font-size:12px; display:flex; align-items:center; justify-content:center; }
+
+      /* problems list */
+      .problem{ display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+      .problem .rank{ font-family:"DM Mono",monospace; font-size:15px; color:var(--rust); min-width:30px; padding-top:2px; }
+      .problem h3{ font-family:"DM Sans",sans-serif; font-weight:700; font-size:16px; }
+      .problem p{ margin:2px 0 0; color:var(--ink-soft); font-size:14.5px; }
+      .tag{ display:inline-block; font-size:12px; font-weight:700; background:var(--pine-soft); color:var(--pine); border-radius:999px; padding:2px 9px; margin-top:5px; }
+      @media (prefers-color-scheme: dark){ .tag{ color:#7fc7ab; } }
+
+      footer.page{ margin-top:34px; color:var(--ink-soft); font-size:13.5px; }
+      footer.page h2{ color:var(--ink); font-size:20px; margin-bottom:6px; }
+    </style>
+  </head>
+  <body>
+    <div class="intro">
+      <div class="intro-inner">
+        <h1>Every sewing-pattern headache, fixed in one place — plus pattern drafting</h1>
+        <p class="lede">Bought a PDF pattern and hit a wall — prints the wrong size, pages won't tape up, the size chart makes no sense, not enough fabric? Start with Tools 1–12. Want a pattern made to <i>your</i> measurements instead? Tools 13–16 add the drafting features from FreeSewing, Sewist and Nastix Patterns: made-to-measure generators, a mix-and-match designer, measurement sets, and whole-garment projects with tech packs.</p>
+        <div class="stats">
+          <span class="stat"><b>18</b> customer problems covered</span>
+          <span class="stat"><b>28</b> features in <b>16</b> tools &amp; guides</span>
+          <span class="stat"><b>29</b> Nastix generators · <b>73</b> FreeSewing designs listed</span>
+          <span class="stat">Runs in your browser — nothing to install</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <nav class="index" aria-label="Tool index">
+        <h2>Start where you're stuck</h2>
+        <p>Most people start at Tool 1 — it checks the actual file you bought before you waste paper on it.</p>
+        <div class="index-grid">
+          <a href="#preflight"><span class="n">01</span><span><span class="t">PDF Pre-Flight Check</span><span class="d">Paper size, layers &amp; wrong-file check on your real PDF</span></span></a>
+          <a href="#zip"><span class="n">02</span><span><span class="t">ZIP File Finder</span><span class="d">Opens your pattern ZIP and tells you which file to print</span></span></a>
+          <a href="#scale"><span class="n">03</span><span><span class="t">Scale Fix Calculator</span><span class="d">Test square off? Get the exact print % to fix it</span></span></a>
+          <a href="#size"><span class="n">04</span><span><span class="t">Size &amp; Blend Picker</span><span class="d">Your size at bust, waist and hip — and the blend path</span></span></a>
+          <a href="#fit"><span class="n">05</span><span><span class="t">Fit Adjustments</span><span class="d">Full-bust adjustment amount + lengthen / shorten</span></span></a>
+          <a href="#seam"><span class="n">06</span><span><span class="t">Seam Allowance Checker</span><span class="d">See what the wrong allowance does to your garment</span></span></a>
+          <a href="#yardage"><span class="n">07</span><span><span class="t">Fabric Yardage Planner</span><span class="d">Lay your pieces on the fabric width before you buy</span></span></a>
+          <a href="#assembly"><span class="n">08</span><span><span class="t">Assembly Planner</span><span class="d">Map the tiled pages, skip the ones you don't need</span></span></a>
+          <a href="#calibrate"><span class="n">09</span><span><span class="t">Projector Calibrator</span><span class="d">Set screen / projector scale with a ruler</span></span></a>
+          <a href="#svg"><span class="n">10</span><span><span class="t">Cricut SVG Checker</span><span class="d">Will Design Space accept your cut file?</span></span></a>
+          <a href="#copyshop"><span class="n">11</span><span><span class="t">Copy-Shop Helper</span><span class="d">A0 cost estimate + exactly what to say at the counter</span></span></a>
+          <a href="#words"><span class="n">12</span><span><span class="t">Jargon Buster &amp; Guides</span><span class="d">Plain-language terms, no-printer routes, paper patterns</span></span></a>
+          <a href="#generator"><span class="n">13</span><span><span class="t">Made-to-Measure Generator</span><span class="d">Draft blocks &amp; details from your measurements — live preview, SVG / DXF</span></span></a>
+          <a href="#mixmatch"><span class="n">14</span><span><span class="t">Mix-and-Match Designer</span><span class="d">Combine bodice, sleeve, neckline &amp; skirt — Sewist-style</span></span></a>
+          <a href="#measuresets"><span class="n">15</span><span><span class="t">Measurement Sets &amp; Sizes</span><span class="d">Women, men, children &amp; dolls · standard sizes 4XS–9XL</span></span></a>
+          <a href="#projects"><span class="n">16</span><span><span class="t">Projects &amp; Tech Pack</span><span class="d">Whole garments: draft order, fabric total, sew order, spec sheet</span></span></a>
+        </div>
+      </nav>
+
+      <!-- ============ FEATURE MAP F1–F16 ============ -->
+      <section class="tool" id="features">
+        <div class="tool-head"><div class="tool-num">F</div>
+          <div><h2>All 28 features — where each one lives</h2><div class="fixes">The original 16, plus every feature from FreeSewing, Sewist &amp; Nastix Patterns</div></div>
+        </div>
+        <p class="why">The research produced a 16-feature list (F1–F16) for one premium tool, grouped into 12 tools. F17–F28 add the features from the three sites you shared, in 4 more tools (13–16). Most are working tools; a few are honestly labelled <b>Checker + guided fix</b> or <b>Guide</b> where full automation isn't possible in a browser today — the note says exactly what's covered and what isn't.</p>
+        <div class="scrollx"><table class="data">
+          <thead><tr><th>#</th><th>Feature</th><th>Lives in</th><th>How it's covered</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">F1</td><td><b>Pre-Flight Checker</b></td><td><a href="#preflight">Tool 1</a></td><td><b>Working tool</b> — reads your real PDF: page size, page count, file type.</td></tr>
+            <tr><td class="mono">F2</td><td><b>Scale-Correction Calculator</b></td><td><a href="#scale">Tool 3</a></td><td><b>Working tool</b> — measured test square → exact corrected scale %.</td></tr>
+            <tr><td class="mono">F3</td><td><b>Web Layer Picker</b></td><td><a href="#preflight">Tool 1</a></td><td><b>Checker + guided fix</b> — detects and lists your PDF's size layers, then walks you through printing only your size. Exporting a single-size PDF in the browser isn't possible in this version.</td></tr>
+            <tr><td class="mono">F4</td><td><b>Paper-Size Converter (A4 ↔ Letter)</b></td><td><a href="#preflight">Tool 1</a> + <a href="#zip">Tool 2</a></td><td><b>Checker + guided fix</b> — flags the mismatch and finds the right-paper file in your ZIP. Re-tiling a file to the other paper size needs the seller's matching file.</td></tr>
+            <tr><td class="mono">F5</td><td><b>One-Click Stitch: A0 &amp; Projector Files</b></td><td><a href="#assembly">Tool 8</a></td><td><b>Planner + guide</b> — assembly map for hand taping; for digital stitching, the free specialists (PDF Stitcher, PatternProjector) are linked in the footer, because page layouts differ per designer and a generic in-browser stitcher would mis-stitch them.</td></tr>
+            <tr><td class="mono">F6</td><td><b>Projector Mode</b></td><td><a href="#calibrate">Tool 9</a></td><td><b>Working tool</b> — ruler-true calibration square and the zoom % to lock in.</td></tr>
+            <tr><td class="mono">F7</td><td><b>Size &amp; Ease Finder</b></td><td><a href="#size">Tool 4</a></td><td><b>Working tool</b> — your size per body point from the pattern's own chart, with high-bust guidance.</td></tr>
+            <tr><td class="mono">F8</td><td><b>Blend My Sizes</b></td><td><a href="#size">Tool 4</a></td><td><b>Working tool</b> — calculates the blend path (e.g. bust 12 → waist 14 → hip 16) to trace onto the printed pieces. No tool today rewrites the bought PDF itself.</td></tr>
+            <tr><td class="mono">F9</td><td><b>Fit Adjuster (FBA &amp; Length)</b></td><td><a href="#fit">Tool 5</a></td><td><b>Working tool</b> — exact FBA amount per side + lengthen/shorten amounts.</td></tr>
+            <tr><td class="mono">F10</td><td><b>Seam Allowance Checker</b></td><td><a href="#seam">Tool 6</a></td><td><b>Working tool</b> — shows the finished-size change from sewing the wrong allowance.</td></tr>
+            <tr><td class="mono">F11</td><td><b>Piece-Aware Yardage &amp; Layout</b></td><td><a href="#yardage">Tool 7</a></td><td><b>Working tool</b> — lays your actual pieces across the fabric width and totals the yardage.</td></tr>
+            <tr><td class="mono">F12</td><td><b>Cut-File Export (SVG / DXF)</b></td><td><a href="#svg">Tool 10</a></td><td><b>Checker + guide</b> — validates your converted SVG against Cricut's real limits (paths, size, fills, text) with the sewing-specific conversion steps. A sewing-accurate PDF→SVG exporter is the one feature no tool offers yet.</td></tr>
+            <tr><td class="mono">F13</td><td><b>Plain-Language Instruction Explainer</b></td><td><a href="#words">Tool 12</a></td><td><b>Guide</b> — searchable jargon buster in plain language. Explaining one specific pattern's steps needs that pattern's instruction text, which stays with the seller's file.</td></tr>
+            <tr><td class="mono">F14</td><td><b>File Helper (ZIP &amp; Phone)</b></td><td><a href="#zip">Tool 2</a></td><td><b>Working tool</b> — opens the ZIP on any device and labels every file in plain language.</td></tr>
+            <tr><td class="mono">F15</td><td><b>Piece Inventory Check</b></td><td><a href="#words">Tool 12</a></td><td><b>Guide</b> — the piece-by-piece check against the pattern's line drawing, before you cut.</td></tr>
+            <tr><td class="mono">F16</td><td><b>Buyer Confidence Pack</b></td><td><a href="#copyshop">Tool 11</a> + <a href="#words">Tool 12</a></td><td><b>Guide</b> — copy-shop cost ranges and counter script, the refund reality-check, and pre-purchase checks.</td></tr>
+            <tr><td colspan="4" style="background:var(--surface2)"><b>Added from the three sites you shared — FreeSewing, Sewist &amp; Nastix Patterns</b></td></tr>
+            <tr><td class="mono">F17</td><td><b>Made-to-Measure Parametric Generation</b> <span class="note">(all three sites)</span></td><td><a href="#generator">Tool 13</a></td><td><b>Working tool</b> — enter measurements, the draft recalculates in the browser with a live preview. Basic blocks are starting points: always sew a toile first.</td></tr>
+            <tr><td class="mono">F18</td><td><b>Design &amp; Generator Library</b> <span class="note">(FreeSewing 73 designs · Nastix 29 generators · Sewist blocks)</span></td><td><a href="#generator">Tool 13</a></td><td><b>Catalogue + working drafts</b> — the complete current FreeSewing design list (all 73 designs on freesewing.eu, checked Nov 2026) is catalogued and searchable as listings; every Nastix generator — blocks and details alike — drafts for real in Tool 13 or its linked project / designer tool, and the blocks the FreeSewing designs build on draft in Tool 13 too.</td></tr>
+            <tr><td class="mono">F19</td><td><b>Measurement Sets</b> <span class="note">(FreeSewing sets · Sewist personal sizes)</span></td><td><a href="#measuresets">Tool 15</a></td><td><b>Working tool</b> — build sets for women, men, children and dolls, load standard sizes, download / re-import a set as a file. Sets live in this tab only — no account, nothing uploaded.</td></tr>
+            <tr><td class="mono">F20</td><td><b>Mix-and-Match Designer</b> <span class="note">(Sewist)</span></td><td><a href="#mixmatch">Tool 14</a></td><td><b>Working tool</b> — combine block, neckline, sleeve, bottom and closure; get the combination, yardage, sew order and spec in real time.</td></tr>
+            <tr><td class="mono">F21</td><td><b>Pattern Editor Settings</b> <span class="note">(FreeSewing core settings)</span></td><td><a href="#generator">Tool 13</a></td><td><b>Working tool</b> — paperless mode (dimensions on the draft), seam-allowance control, units (in / cm), scale, margin and included-parts toggles.</td></tr>
+            <tr><td class="mono">F22</td><td><b>Exports: PDF sizes, SVG, DXF &amp; Projector</b> <span class="note">(all three sites)</span></td><td><a href="#generator">Tool 13</a></td><td><b>Working tool</b> — download true-scale SVG and a simple DXF outline, plus the tiled A4 / Letter page count, A0 sheet check and 36″ projector-width check for your draft's size.</td></tr>
+            <tr><td class="mono">F23</td><td><b>Presets &amp; Coordinated Sets</b> <span class="note">(Nastix)</span></td><td><a href="#generator">Tool 13</a> + <a href="#projects">Tool 16</a></td><td><b>Working tool</b> — fitted / relaxed / A-line / oversized presets set ease and shape; related pieces (bodice + sleeve, neckline + facing, cuff + overlap) are drafted to match.</td></tr>
+            <tr><td class="mono">F24</td><td><b>Standard Sizes 4XS–9XL + Doll Patterns</b> <span class="note">(Sewist)</span></td><td><a href="#measuresets">Tool 15</a></td><td><b>Working tool</b> — one-click standard-size loading across Sewist's full range, including a doll scale set.</td></tr>
+            <tr><td class="mono">F25</td><td><b>Tech Flats &amp; Specification Sheets</b> <span class="note">(Sewist)</span></td><td><a href="#projects">Tool 16</a></td><td><b>Working tool</b> — generates a spec sheet (garment, sizes, fabric, notions, key measurements) you can download — the text equivalent of Sewist's vector tech pack.</td></tr>
+            <tr><td class="mono">F26</td><td><b>Instructions in Multiple Languages</b> <span class="note">(Sewist)</span></td><td><a href="#mixmatch">Tool 14</a></td><td><b>Working tool</b> — the sew-order steps for your combination in English, Spanish, French, German or Dutch.</td></tr>
+            <tr><td class="mono">F27</td><td><b>Whole-Garment Projects</b> <span class="note">(Nastix)</span></td><td><a href="#projects">Tool 16</a></td><td><b>Working tool</b> — which generator to draft first, which numbers carry over, total fabric for the whole garment, and the order to sew it in.</td></tr>
+            <tr><td class="mono">F28</td><td><b>Royalty-Free Use &amp; Showcase Notes</b> <span class="note">(Sewist + FreeSewing)</span></td><td><a href="#projects">Tool 16</a></td><td><b>Guide</b> — what "sew and sell" does and doesn't cover on each platform, and a showcase checklist for sharing finished makes. Sewist's shop / social network and FreeSewing accounts are those sites' own services — linked in the footer, not copied here.</td></tr>
+          </tbody>
+        </table></div>
+      </section>
+
+      <!-- ============ 01 PRE-FLIGHT ============ -->
+      <section class="tool" id="preflight">
+        <div class="tool-head"><div class="tool-num">01</div>
+          <div><h2>PDF Pre-Flight Check</h2><div class="fixes">Fixes problem #1 wrong scale · #4 layers · #5 A4 vs Letter · #8 wrong file</div></div>
+        </div>
+        <p class="why">The single biggest gap in sewing tools today: nobody checks the file you actually bought before you print it. Pick your pattern PDF and this reads its real page size, page count and size layers, then tells you which file you've got and what to do with it.</p>
+        <blockquote>"If you try to print the copyshop files on your home printer, the images will either get majorly cut off or your pattern pieces will come out teeny tiny."<footer>— Cashmerette troubleshooting checklist · <a href="https://blog.cashmerette.com/2020/04/why-isnt-my-pdf-pattern-working-a-sewing-checklist.html" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="drop">
+          <label class="f">Your pattern PDF<input type="file" id="pf-file" accept="application/pdf,.pdf" /></label>
+          <label class="f">The paper in your printer
+            <select id="pf-paper"><option value="A4">A4</option><option value="Letter">US Letter</option><option value="shop">I'm sending it to a copy shop / projector</option></select>
+          </label>
+          <button class="btn" id="pf-run">Check this PDF</button>
+          <p class="note" style="margin-top:10px">The file is read on this device, in this tab — it isn't uploaded anywhere.</p>
+        </div>
+        <div class="result" id="pf-result"></div>
+      </section>
+
+      <!-- ============ 02 ZIP FINDER ============ -->
+      <section class="tool" id="zip">
+        <div class="tool-head"><div class="tool-num">02</div>
+          <div><h2>ZIP File Finder</h2><div class="fixes">Fixes problem #8 can't open / wrong file · #18 phone-only</div></div>
+        </div>
+        <p class="why">Patterns usually arrive as a ZIP holding several files — print-at-home, copy-shop, instructions, sometimes several cup sizes. Phones can't open ZIPs at all, and picking the wrong file is a classic ruined print. Open the ZIP here and every file is labelled in plain language.</p>
+        <blockquote>"Even if you purchased your pattern using a smartphone or tablet, you should download your pattern on a desktop or laptop computer. Mobile devices can't open the ZIP file… you also can't control the scale when printing from your phone."<footer>— Cashmerette · <a href="https://blog.cashmerette.com/2020/04/why-isnt-my-pdf-pattern-working-a-sewing-checklist.html" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="drop">
+          <label class="f">Your pattern ZIP<input type="file" id="zip-file" accept=".zip,application/zip" /></label>
+          <label class="f">How will you print?
+            <select id="zip-mode"><option value="home">Home printer</option><option value="shop">Copy shop (A0)</option><option value="projector">Projector</option></select>
+          </label>
+          <button class="btn" id="zip-run">Open the ZIP</button>
+        </div>
+        <div class="result" id="zip-result"></div>
+      </section>
+
+      <!-- ============ 03 SCALE FIX ============ -->
+      <section class="tool" id="scale">
+        <div class="tool-head"><div class="tool-num">03</div>
+          <div><h2>Scale Fix Calculator</h2><div class="fixes">Fixes problem #1 — the #1 issue in all of pattern sewing</div></div>
+        </div>
+        <p class="why">Printers love to shrink patterns to 94–96% with "Fit to Page". Print just the test-square page, measure the square with a ruler, and enter what you got — you'll get the exact custom scale % to type into your print dialog, plus what the error would have done to your garment.</p>
+        <blockquote>"A square that is off by even 1/8 inch… that's 1/8 inch for every single inch. So if your waist is 32 inches, your pattern would actually cut out at only 28 inches."<footer>— Sewing Society · <a href="https://sewingsociety.com/what-to-do-if-the-1-inch-square-on-your-pattern-is-not-right" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Test square on the pattern
+            <select id="sc-expected"><option value="1">1 inch square</option><option value="2">2 inch square</option><option value="3.937">10 cm square</option><option value="1.969">5 cm square</option></select>
+          </label>
+          <label class="f">What your ruler says it printed at (inches)<input type="number" id="sc-measured" step="0.01" min="0" placeholder="e.g. 0.94" /></label>
+          <label class="f">A body measurement to check the damage (inches)<span class="hint">Optional — e.g. your waist. Shows what size it would have cut at.</span><input type="number" id="sc-body" step="0.1" min="0" placeholder="e.g. 32" /></label>
+        </div>
+        <button class="btn" id="sc-run">Calculate the corrected scale</button>
+        <div class="result" id="sc-result"></div>
+      </section>
+
+      <!-- ============ 04 SIZE & BLEND ============ -->
+      <section class="tool" id="size">
+        <div class="tool-head"><div class="tool-num">04</div>
+          <div><h2>Size &amp; Blend Picker</h2><div class="fixes">Fixes problem #2 choosing a size · #6 grading between sizes</div></div>
+        </div>
+        <p class="why">Never pick your shop size — pattern sizes are a separate system, and a ready-to-wear 12 is commonly a pattern 16 or 18. Type in <b>your pattern's own size chart</b> (it's in the instructions PDF), then your measurements. You get your size at each body point and the blend path to trace between them.</p>
+        <blockquote>"Pick your pattern size from your body measurements and the pattern's own size chart, never from the size you buy in shops."<footer>— Sewing With Ease size guide · <a href="https://sewingwithease.com/sewing-patterns/5-steps-to-pick-the-right-sewing-pattern-size/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Your full bust (inches)<input type="number" id="sz-bust" step="0.25" min="0" placeholder="e.g. 38" /></label>
+          <label class="f">Your waist (inches)<input type="number" id="sz-waist" step="0.25" min="0" placeholder="e.g. 31" /></label>
+          <label class="f">Your hips (inches)<input type="number" id="sz-hip" step="0.25" min="0" placeholder="e.g. 42" /></label>
+          <label class="f">Your high bust (inches)<span class="hint">Optional — measured above the bust, under the arms. For tops and dresses, this picks a better neck/shoulder fit.</span><input type="number" id="sz-highbust" step="0.25" min="0" placeholder="e.g. 35" /></label>
+        </div>
+        <p class="note"><b>The chart below is a sample</b> (a common Big-Four-style chart in inches) so you can try the tool. Before trusting the answer, overwrite every number with the size chart printed in your own pattern — charts differ between brands.</p>
+        <div class="scrollx"><table class="data" id="sz-chart">
+          <thead><tr><th>Size</th><th>Bust</th><th>Waist</th><th>Hip</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <button class="btn" id="sz-run">Find my sizes</button>
+        <div class="result" id="sz-result"></div>
+      </section>
+
+      <!-- ============ 05 FIT ADJUSTMENTS ============ -->
+      <section class="tool" id="fit">
+        <div class="tool-head"><div class="tool-num">05</div>
+          <div><h2>Fit Adjustments: Bust &amp; Length</h2><div class="fixes">Fixes problem #11 plus-size / petite / tall / full-bust fit</div></div>
+        </div>
+        <p class="why">Most patterns are drafted for a B cup and average height. If you pick the size that fits your bust, the shoulders and back come out too wide; pick by shoulders and the bust strains. A Full Bust Adjustment (FBA) adds room only where it's needed — here's exactly how much, plus lengthen/shorten amounts for petite and tall bodies.</p>
+        <blockquote>"If you choose the size for your new dress or top based on your bust measurement, the dress will be too wide across the back and the shoulders… if you go down a size, the fabric stretches across the bust."<footer>— Maria Denmark, FBA guide · <a href="https://www.mariadenmark.com/2019/06/a-better-fba/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Full bust (inches)<input type="number" id="fba-full" step="0.25" min="0" placeholder="e.g. 40" /></label>
+          <label class="f">High bust (inches)<input type="number" id="fba-high" step="0.25" min="0" placeholder="e.g. 36" /></label>
+          <label class="f">Pattern's back-waist length (inches)<span class="hint">From the pattern's finished measurements or size chart.</span><input type="number" id="ln-pat" step="0.25" min="0" placeholder="e.g. 16.5" /></label>
+          <label class="f">Your back-waist length (inches)<span class="hint">Base of neck to natural waist, down the spine.</span><input type="number" id="ln-you" step="0.25" min="0" placeholder="e.g. 15" /></label>
+        </div>
+        <button class="btn" id="fit-run">Calculate adjustments</button>
+        <div class="result" id="fit-result"></div>
+      </section>
+
+      <!-- ============ 06 SEAM ALLOWANCE ============ -->
+      <section class="tool" id="seam">
+        <div class="tool-head"><div class="tool-num">06</div>
+          <div><h2>Seam Allowance Checker</h2><div class="fixes">Fixes problem #12 — the quiet size-killer</div></div>
+        </div>
+        <p class="why">Big-Four patterns use 5/8″, many indie patterns use 3/8″ or 1/2″. Sew with the wrong one and every seam eats (or adds) fabric twice — the finished garment comes out a different size and you never touched the pattern. Check what your assumption would do before you sew.</p>
+        <blockquote>"If you assume 5/8″ when the pattern calls for 3/8″, your garment will end up significantly smaller than intended."<footer>— Sewing With Ease, how to read a pattern · <a href="https://sewingwithease.com/sewing-patterns/how-to-read-a-sewing-pattern/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Seam allowance the pattern states
+            <select id="sa-pattern"><option value="0.375">3/8″ (common indie)</option><option value="0.5">1/2″</option><option value="0.625" selected>5/8″ (Big Four standard)</option><option value="0.394">1 cm</option><option value="0.591">1.5 cm</option><option value="0">None included — must be added</option></select>
+          </label>
+          <label class="f">Seam allowance you planned to sew
+            <select id="sa-sew"><option value="0.375">3/8″</option><option value="0.5">1/2″</option><option value="0.625" selected>5/8″</option><option value="0.394">1 cm</option><option value="0.591">1.5 cm</option></select>
+          </label>
+          <label class="f">Seams joining around the body at the tightest point<span class="hint">Side seams only = 2. Princess seams or extra panels = more.</span>
+            <select id="sa-seams"><option value="2">2 seams</option><option value="4">4 seams</option><option value="6">6 seams</option></select>
+          </label>
+        </div>
+        <button class="btn" id="sa-run">Check the difference</button>
+        <div class="result" id="sa-result"></div>
+      </section>
+
+      <!-- ============ 07 YARDAGE ============ -->
+      <section class="tool" id="yardage">
+        <div class="tool-head"><div class="tool-num">07</div>
+          <div><h2>Fabric Yardage Planner</h2><div class="fixes">Fixes problem #13 running out of fabric mid-cut</div></div>
+        </div>
+        <p class="why">Pattern yardage charts assume perfect cutting, no nap, no mistakes. Enter the bounding size of your biggest pieces and this lays them out across your real fabric width — with a waste allowance — so you don't discover the missing sleeve halfway through cutting.</p>
+        <blockquote>"Few sewing mistakes sting like discovering, halfway through cutting, that the last sleeve needs fabric you do not have."<footer>— Sewing Trip yardage guide · <a href="https://sewingtrip.com/how-to-calculate-sew/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="scrollx"><table class="data" id="yd-pieces">
+          <thead><tr><th>Piece</th><th>Width across fabric (in)</th><th>Length along fabric (in)</th><th>How many</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <button class="btn secondary" id="yd-add">+ Add a piece</button>
+        <div class="grid2" style="margin-top:14px">
+          <label class="f">Fabric width
+            <select id="yd-width"><option value="45">45″ (quilting cotton)</option><option value="54">54″</option><option value="60" selected>60″ (most apparel fabric)</option><option value="44">44″</option></select>
+          </label>
+          <label class="f">Safety / waste allowance
+            <select id="yd-waste"><option value="0">None — exact layout</option><option value="0.1" selected>10% (sensible default)</option><option value="0.15">15% (directional print / nap)</option><option value="0.2">20% (first time with this pattern)</option></select>
+          </label>
+        </div>
+        <button class="btn" id="yd-run">Calculate yardage</button>
+        <div class="result" id="yd-result"></div>
+        <p class="note">Pieces are laid out as rectangles — curved pieces nest tighter in real life, so treat the result as a safe buying figure, not an exact one. Always add extra for a directional print, a large repeat, or shrinkage.</p>
+      </section>
+
+      <!-- ============ 08 ASSEMBLY ============ -->
+      <section class="tool" id="assembly">
+        <div class="tool-head"><div class="tool-num">08</div>
+          <div><h2>Assembly Planner for Tiled Pages</h2><div class="fixes">Fixes problem #3 taping 20–60 pages together</div></div>
+        </div>
+        <p class="why">Stitching tools can merge pages into one big sheet, but if you're taping by hand, plan it first: enter the grid from your pattern's assembly diagram, tap any page you don't need (other views, sizes or pieces), and get the real page count and finished sheet size.</p>
+        <blockquote>"Piecing together a puzzle of 20, 40, or even 60 pages. Trimming margins, aligning lines, and taping carefully… until your table is covered in slightly misaligned pages."<footer>— Fabrico · <a href="https://fabrico.design/cutting-through-the-chaos/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Columns (pages across)<input type="number" id="asm-cols" min="1" max="14" value="5" /></label>
+          <label class="f">Rows (pages down)<input type="number" id="asm-rows" min="1" max="14" value="6" /></label>
+          <label class="f">Paper
+            <select id="asm-paper"><option value="A4">A4 (8.27 × 11.69″)</option><option value="Letter">US Letter (8.5 × 11″)</option></select>
+          </label>
+        </div>
+        <button class="btn" id="asm-run">Build my assembly map</button>
+        <div class="result" id="asm-result"></div>
+        <h3 style="margin-top:18px; font-size:19px">Tape it right, first time</h3>
+        <ul class="checklist">
+          <li>Trim only the edges the diagram marks — usually the bottom and right margins. Trimming all four sides removes your overlap and the lines won't meet.</li>
+          <li>Work row by row on the biggest flat surface you have; align the diamonds / numbers / grid marks before any tape goes down.</li>
+          <li>Check the printed 1″ grid lines up across every join — Cashmerette's rule: if the grid breaks anywhere, that join is off; take it apart and redo it.</li>
+          <li>Tape on the back as well as the front if the sheet will be used more than once.</li>
+        </ul>
+      </section>
+
+      <!-- ============ 09 CALIBRATOR ============ -->
+      <section class="tool" id="calibrate">
+        <div class="tool-head"><div class="tool-num">09</div>
+          <div><h2>Projector &amp; Screen Calibrator</h2><div class="fixes">Fixes problem #9 projector setup &amp; calibration</div></div>
+        </div>
+        <p class="why">Projecting a pattern only works if what's on your cutting mat is true size. Project (or display) the square below onto your mat, hold a ruler against it, and move the slider until the square measures <b>exactly</b> the target. The percentage shown is the zoom to keep for that setup — recalibrate every time the projector moves.</p>
+        <blockquote>"Calibration is an essential step and your patterns will not cut out correctly without it. Don't skip any steps!"<footer>— Projector Sewing calibration guide · <a href="https://projectorsewing.com/calibrate-a-projector-for-sewing/" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <label class="f">Square to match
+          <select id="cal-target"><option value="1">1 inch</option><option value="2">2 inches</option><option value="1.969">5 cm</option></select>
+        </label>
+        <div class="cal-stage">
+          <input type="range" id="cal-slider" min="40" max="220" value="100" step="0.5" aria-label="Scale percent" />
+          <div class="cal-square" id="cal-square"><span id="cal-label">1″</span></div>
+          <p style="margin:6px 0 0">Display scale: <b class="mono" id="cal-pct">100%</b> — set your projector / app zoom to this and leave it there.</p>
+        </div>
+        <ul class="tight">
+          <li>Below 720p native resolution, most projectors can't calibrate correctly (aspect ratio distortion) — the known exceptions are the Apeman and Wowoto models.</li>
+          <li>Use HDMI, not VGA, and turn keystone off: keystone is what turns squares into rectangles and bows straight lines.</li>
+          <li>One sewist traced a suit 10% too big in one direction and a collar 10% too small the other way after nudging a mouse scroll wheel mid-session — lock your zoom before you start cutting.</li>
+        </ul>
+      </section>
+
+      <!-- ============ 10 SVG CHECKER ============ -->
+      <section class="tool" id="svg">
+        <div class="tool-head"><div class="tool-num">10</div>
+          <div><h2>Cricut / Silhouette SVG Checker</h2><div class="fixes">Fixes problem #15 PDF → cut file for Cricut &amp; Silhouette</div></div>
+        </div>
+        <p class="why">Converted a pattern to SVG for your cutting machine? Design Space rejects files with pattern fills, clipping paths, live text or linked images — and anything over 5,000 paths or 20 MB. Check your file against the real limits before you upload it and hit the error wall.</p>
+        <div class="drop">
+          <label class="f">Your SVG cut file<input type="file" id="svg-file" accept=".svg,image/svg+xml" /></label>
+          <button class="btn" id="svg-run">Check this SVG</button>
+        </div>
+        <div class="result" id="svg-result"></div>
+        <details>
+          <summary>Converting a pattern PDF to a cut file — what actually matters</summary>
+          <ul class="tight">
+            <li><b>Scale is everything:</b> after converting, measure a known piece in your design software. Generic converters don't guarantee 1:1 — if the test square isn't exact, the pieces won't be either.</li>
+            <li><b>Keep the markings:</b> notches, grainlines and piece names are separate elements in most conversions and are the first things lost. A piece without notches sews up wrong.</li>
+            <li><b>Outlines only:</b> expand/outlines all text, remove pattern fills and clipping paths before export — Cricut refuses files that contain them.</li>
+            <li><b>Mat size:</b> pieces bigger than your 12 × 24″ mat must be split, with overlap and alignment marks added, or they simply won't cut.</li>
+            <li><b>Silhouette owners:</b> Studio Basic cannot open SVG at all — it needs the paid Designer Edition upgrade (about $49.99) or a DXF file instead.</li>
+          </ul>
+        </details>
+      </section>
+
+      <!-- ============ 11 COPY SHOP ============ -->
+      <section class="tool" id="copyshop">
+        <div class="tool-head"><div class="tool-num">11</div>
+          <div><h2>Copy-Shop Helper (A0 printing)</h2><div class="fixes">Fixes problem #10 wrong file at the shop · #18 no home printer</div></div>
+        </div>
+        <p class="why">The classic copy-shop disaster: handing over the tiled home-print file, so the shop prints every tile separately and charges per page — or scales your A0 file "to fit". Bring the single A0 / copyshop file (Tool 1 and Tool 2 identify it), estimate the cost here, and use the script.</p>
+        <div class="grid2">
+          <label class="f">Number of A0 sheets in the file<span class="hint">Tool 1 tells you the page count of your copyshop file.</span><input type="number" id="cs-sheets" min="1" value="2" /></label>
+          <label class="f">Region
+            <select id="cs-region"><option value="us">United States ($)</option><option value="uk">United Kingdom (£)</option></select>
+          </label>
+        </div>
+        <button class="btn" id="cs-run">Estimate the cost</button>
+        <div class="result" id="cs-result"></div>
+        <h3 style="margin-top:18px; font-size:19px">Say this at the counter</h3>
+        <ul class="checklist">
+          <li>"Please print this A0 file at <b>100% — no scaling, no 'fit to page'</b>, black and white is fine."</li>
+          <li>"Before I pay, can we measure the test square together? It must read exactly 1 inch / 10 cm." (Shops' own rule: the copyshop must print at 'no scaling' for the scale to be correct.)</li>
+          <li>Printed patterns are usually <b>non-refundable</b> — that test-square check at the counter is your only protection.</li>
+        </ul>
+      </section>
+
+      <!-- ============ 12 JARGON & GUIDES ============ -->
+      <section class="tool" id="words">
+        <div class="tool-head"><div class="tool-num">12</div>
+          <div><h2>Jargon Buster &amp; Survival Guides</h2><div class="fixes">Fixes problem #7 instructions · #14 pieces &amp; notches · #16 refunds · #17 paper patterns · #18 no printer</div></div>
+        </div>
+        <p class="why">Pattern instructions "read like encrypted military documents" — they assume knowledge nobody taught you. Search any term for a plain-language meaning, then the short guides for the situations no calculator can fix.</p>
+        <blockquote>"Sewing patterns read like encrypted military documents. Beginners Google each term, watch three YouTube tutorials, and still can't figure out why their sleeve is somehow attached to a collar."<footer>— IdeaBrowser summary of r/sewing &amp; Facebook frustration · <a href="https://www.ideabrowser.com/database?page=17&per_page=48" target="_blank" rel="noopener">source</a></footer></blockquote>
+        <label class="f">Search a term<input type="text" id="gloss-q" placeholder="Try: ease, grainline, notch, toile…" /></label>
+        <div id="gloss-list"></div>
+        <details>
+          <summary>No printer at all? Your three real routes</summary>
+          <ul class="tight">
+            <li><b>Copy shop:</b> take the A0 file (Tool 2 finds it in your ZIP) — see Tool 11 for cost and the counter script.</li>
+            <li><b>Projector:</b> project the pattern straight onto fabric — no paper at all. Needs calibration (Tool 9); free tools like PatternProjector do the projecting.</li>
+            <li><b>Phone printing apps</b> (e.g. Sewsy) can print layered patterns at correct scale from a phone or tablet — note Android's print dialog can't set scale directly, so follow the app's calibration flow.</li>
+            <li>You can read instructions on a tablet happily — but pattern pieces themselves must end up at full size on paper or projected. You can't cut fabric accurately from a screen held at arm's length.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Missing or confusing pattern pieces</summary>
+          <ul class="tight">
+            <li>Before cutting, lay out every piece and tick it against the pattern's "pieces" list / line drawing in the instructions. Reviewers repeatedly find pieces missing, extra, or referenced in the instructions but never drawn.</li>
+            <li>Notches that aren't labelled are the most common confusion — match notches by position along the seam, and mark each piece with its name in pencil before you separate them.</li>
+            <li>If a piece genuinely doesn't exist, message the seller with the piece name and a photo of the line drawing — that's a drafting error only they can fix, and it's a legitimate "not as described" case.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Refunds on digital patterns — the honest picture</summary>
+          <ul class="tight">
+            <li>Most pattern companies state plainly: <b>no refunds on digital products</b> (Cashmerette's FAQ says exactly this).</li>
+            <li>On Etsy, buyers report refunds being issued from the seller's account even when the file was downloaded — so "I bought the wrong thing" sometimes gets refunded, sometimes not. Don't count on it.</li>
+            <li>The real protection is before you buy: run the file through Tool 1 the moment it arrives, and check the listing states your paper size, your size range and a copyshop file if you need one.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Paper (tissue) patterns: make them survive</summary>
+          <ul class="tight">
+            <li>Tissue tears with repeated pinning and use — trace your size onto sturdier paper (Swedish tracing paper, medical exam paper) and keep the tissue as the master.</li>
+            <li>Store flat, cool, dry and out of sunlight; refold on the original creases and keep all pieces in the envelope — a used pattern missing one piece is worthless.</li>
+            <li>Buying vintage/used: check every piece against the envelope's piece list before paying. Missing pieces is the top defect in second-hand patterns.</li>
+          </ul>
+        </details>
+      </section>
+
+      <!-- ============ 13 GENERATOR ============ -->
+      <section class="tool" id="generator">
+        <div class="tool-head"><div class="tool-num">13</div>
+          <div><h2>Made-to-Measure Pattern Generator</h2><div class="fixes">From FreeSewing · Sewist CAD · Nastix Patterns — parametric drafting, presets, live preview, SVG / DXF export</div></div>
+        </div>
+        <p class="why">All three sites work the same way: you don't fit yourself into a size chart — the draft is recalculated from <b>your</b> measurements. Pick a block or detail below, choose a preset, enter your numbers and watch the pieces redraw. Core settings work like FreeSewing's editor: paperless mode puts the dimensions on the draft, and you control seam allowance, units, scale, margin and which parts are included.</p>
+        <blockquote>"You choose a generator, enter the measurements for your project, and the browser recalculates the draft. The result is a working pattern based on your inputs rather than a picture of a standard size."<footer>— Nastix Patterns · <a href="https://nastix-patterns.com/" target="_blank" rel="noopener">nastix-patterns.com</a></footer></blockquote>
+
+        <div class="grid2">
+          <label class="f">Pattern to draft
+            <select id="gen-type">
+              <option value="bodice">Basic Bodice Block — Nastix / FreeSewing Bella &amp; Brian blocks</option>
+              <option value="dress">Basic Dress Block — bodice + skirt, one draft (Nastix)</option>
+              <option value="skirt">Basic Skirt Block — straight / pencil / A-line / flared (Nastix)</option>
+              <option value="circle">Circle Skirt — quarter / half / full / six-panel (Nastix)</option>
+              <option value="tshirt">T-Shirt — knit top with neckband (Nastix / FreeSewing Teagan)</option>
+              <option value="sleeve">Basic Sleeve Block — matched to the bodice armhole (Nastix)</option>
+              <option value="pants">Basic Pants / Trousers Block (Nastix / FreeSewing Titan)</option>
+              <option value="shorts">Basic Shorts Block (Nastix)</option>
+              <option value="pocket">Patch Pocket — shape presets + topstitch guide (Nastix)</option>
+              <option value="waistband">Waistband — straight / contour / elastic / button overlap (Nastix)</option>
+              <option value="collar">Collar — shirt / stand / flat (Nastix)</option>
+              <option value="cuff">Sleeve Cuff — fold line + overlap (Nastix)</option>
+              <option value="tanktop">Tank Top — sleeveless top + bindings (Nastix)</option>
+              <option value="hood">Hood — two-piece, matched to the neckline (Nastix)</option>
+              <option value="placket-sleeve">Sleeve Placket — tower piece + underlap (Nastix)</option>
+              <option value="placket-front">Front Placket — button + buttonhole sides (Nastix)</option>
+              <option value="facing-armhole">Armhole Facing — matched to the armhole (Nastix)</option>
+              <option value="vent">Skirt Vent / Kick Pleat — underlay + facing (Nastix)</option>
+              <option value="beltloop">Belt Loops — a set for your waist (Nastix)</option>
+              <option value="pocket-inseam">In-Seam Pocket — pocket bag pair (Nastix)</option>
+              <option value="pocket-welt">Welt Pocket — welt strip + bag (Nastix)</option>
+              <option value="pocket-slant">Slant Pocket — bag + facing (Nastix)</option>
+              <option value="fly">Zipper Fly — fly facing + shield (Nastix)</option>
+              <option value="flap">Pocket Flap — rounded / straight / pointed (Nastix)</option>
+            </select>
+          </label>
+          <label class="f">Preset — sets ease &amp; shape, then edit freely
+            <select id="gen-preset">
+              <option value="fitted">Fitted — low ease, shaped darts</option>
+              <option value="classic" selected>Classic — standard wearing ease</option>
+              <option value="relaxed">Relaxed — generous ease</option>
+              <option value="oversized">Oversized — dropped, roomy (knits &amp; tops)</option>
+              <option value="aline">A-line — fitted waist, flared hem</option>
+            </select>
+          </label>
+          <label class="f">Bust / chest (inches)<input type="number" id="gen-bust" step="0.25" value="38" /></label>
+          <label class="f">Waist (inches)<input type="number" id="gen-waist" step="0.25" value="30" /></label>
+          <label class="f">Hips (inches)<input type="number" id="gen-hip" step="0.25" value="40" /></label>
+          <label class="f">Back-waist length (inches)<span class="hint">Bodice / dress length. Skirt &amp; pants use garment length below.</span><input type="number" id="gen-back" step="0.25" value="16.5" /></label>
+          <label class="f">Garment length (inches)<span class="hint">Skirt length, pants outseam, top length or detail size — per pattern.</span><input type="number" id="gen-len" step="0.5" value="24" /></label>
+          <label class="f">Bicep (inches)<span class="hint">For the sleeve block.</span><input type="number" id="gen-bicep" step="0.25" value="12" /></label>
+        </div>
+
+        <h3 style="margin-top:16px; font-size:19px">Editor settings — FreeSewing style</h3>
+        <div class="grid2">
+          <label class="f">Seam allowance included
+            <select id="gen-sa"><option value="0">None — stitching lines only</option><option value="0.375">3/8″</option><option value="0.625" selected>5/8″</option><option value="0.394">1 cm</option><option value="0.591">1.5 cm</option></select>
+          </label>
+          <label class="f">Units on the draft
+            <select id="gen-units"><option value="in">Inches</option><option value="cm">Centimetres</option></select>
+          </label>
+          <label class="f">Paperless mode<span class="hint">FreeSewing's paperless view: dimensions printed on the pieces for projector / screen drafting.</span>
+            <select id="gen-paperless"><option value="on" selected>On — show dimensions</option><option value="off">Off — clean pieces</option></select>
+          </label>
+          <label class="f">Export paper
+            <select id="gen-paper"><option value="A4">Tiled A4</option><option value="Letter">Tiled US Letter</option><option value="A0">Full-size A0 / copy shop</option><option value="proj36">Projector — 36″ width (Sewist)</option></select>
+          </label>
+        </div>
+        <p class="note" style="margin-bottom:4px"><b>Included parts</b> — tap to include / exclude, like FreeSewing's parts list:</p>
+        <div class="chips" id="gen-parts">
+          <button type="button" class="chip on" data-part="front">Front</button>
+          <button type="button" class="chip on" data-part="back">Back</button>
+          <button type="button" class="chip on" data-part="sleeve">Sleeve / second piece</button>
+          <button type="button" class="chip on" data-part="extra">Facing / band / detail</button>
+        </div>
+        <button class="btn" id="gen-run">Draft my pattern</button>
+        <button class="btn secondary" id="gen-svg" style="margin-left:8px">Download SVG</button>
+        <button class="btn secondary" id="gen-dxf" style="margin-left:8px">Download DXF outline</button>
+        <div class="result" id="gen-result"></div>
+
+        <h3 style="margin-top:20px; font-size:19px">The full library — every generator &amp; design from the three sites</h3>
+        <p class="note">Search the catalogue. “Drafts in Tool 13” = a working draft above — every Nastix entry drafts here or in its linked project / designer tool. FreeSewing entries are <b>catalogue listings only</b>: the complete current design list from freesewing.eu (73 designs), shown so nothing from the site is missing — they don't draft on this page, but the blocks many of them build on (Bella, Brian, Titan, Sandy…) do, and each card says so.</p>
+        <label class="f">Search the library<input type="text" id="cat-q" placeholder="Try: hood, pocket, corset, doll, waistcoat…" /></label>
+        <div class="catalogue" id="cat-grid"></div>
+      </section>
+
+      <!-- ============ 14 MIX AND MATCH ============ -->
+      <section class="tool" id="mixmatch">
+        <div class="tool-head"><div class="tool-num">14</div>
+          <div><h2>Mix-and-Match Designer</h2><div class="fixes">From Sewist — combine blocks &amp; design elements in real time, made to measure</div></div>
+        </div>
+        <p class="why">Sewist's core idea: pick a basic block, customise the fit and add design elements — their designer advertises trillions of combinations from the same parts. Choose each element below and the garment, yardage, sew order and spec update together. No drafting experience needed: the parts are pre-matched, like Sewist's expert-checked templates.</p>
+        <blockquote>"Choose from our range of basic blocks, customise the fit and add design elements in real time. All patterns are made to measure for your size measurements by our expert designers."<footer>— Sewist · <a href="https://www.sewist.com/" target="_blank" rel="noopener">sewist.com</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Garment
+            <select id="mm-garment"><option value="dress">Dress</option><option value="topskirt">Top + skirt outfit</option><option value="top">Top / blouse only</option><option value="jumpsuit">Jumpsuit</option></select>
+          </label>
+          <label class="f">Bodice fit
+            <select id="mm-fit"><option value="fitted">Fitted with darts</option><option value="semi">Semi-fitted</option><option value="relaxed">Relaxed / no darts</option></select>
+          </label>
+          <label class="f">Neckline
+            <select id="mm-neck"><option value="round">Round</option><option value="v">V-neck</option><option value="scoop">Scoop</option><option value="boat">Boat</option><option value="collar">Shirt collar + stand</option></select>
+          </label>
+          <label class="f">Sleeve
+            <select id="mm-sleeve"><option value="none">Sleeveless</option><option value="cap">Cap</option><option value="short">Short</option><option value="elbow">Elbow / ¾</option><option value="long">Long with cuff</option><option value="raglan">Raglan</option><option value="puff">Puff</option></select>
+          </label>
+          <label class="f">Skirt / bottom
+            <select id="mm-skirt"><option value="pencil">Pencil</option><option value="aline">A-line</option><option value="circle">Circle / full</option><option value="straight">Straight with vent</option><option value="pants">Pants</option><option value="shorts">Shorts</option></select>
+          </label>
+          <label class="f">Closure
+            <select id="mm-closure"><option value="zipback">Invisible zip — back</option><option value="buttons">Buttons — front placket</option><option value="pullon">Pull-on / elastic waist</option><option value="wrap">Wrap + ties</option></select>
+          </label>
+          <label class="f">Who is it for?
+            <select id="mm-who"><option value="women">Women</option><option value="men">Men</option><option value="children">Children</option><option value="doll">Doll — Sewist's doll range</option></select>
+          </label>
+          <label class="f">Instruction language <span class="hint">Sewist offers instructions in multiple languages before purchase — the sew order below follows your pick.</span>
+            <select id="mm-lang"><option value="en">English</option><option value="es">Español</option><option value="fr">Français</option><option value="de">Deutsch</option><option value="nl">Nederlands</option></select>
+          </label>
+        </div>
+        <button class="btn" id="mm-run">Build my combination</button>
+        <div class="result" id="mm-result"></div>
+      </section>
+
+      <!-- ============ 15 MEASUREMENT SETS ============ -->
+      <section class="tool" id="measuresets">
+        <div class="tool-head"><div class="tool-num">15</div>
+          <div><h2>Measurement Sets &amp; Standard Sizes</h2><div class="fixes">From FreeSewing measurement sets · Sewist personal sizes 4XS–9XL, men / women / children / dolls</div></div>
+        </div>
+        <p class="why">FreeSewing stores your patterns against saved <b>measurement sets</b> — one set per person you sew for — and Sewist drafts to personal sizes for women, men and children from 4XS to 9XL, plus doll patterns. Build a set here, load a standard size as a starting point, then download the set as a file to keep and re-import next time. Sets are held in this tab only — there is no account and nothing leaves your device.</p>
+        <blockquote>"Generate bespoke sewing patterns. Store your patterns &amp; measurements sets. Share your creations with the community."<footer>— FreeSewing · <a href="https://freesewing.eu/" target="_blank" rel="noopener">freesewing.eu</a></footer></blockquote>
+        <div class="grid2">
+          <label class="f">Set name<input type="text" id="ms-name" value="My measurements" /></label>
+          <label class="f">Sewing for
+            <select id="ms-who"><option value="women">Women</option><option value="men">Men</option><option value="children">Children</option><option value="doll">Doll (scale set)</option></select>
+          </label>
+          <label class="f">Load a standard size (Sewist range)
+            <select id="ms-std">
+              <option value="">— keep my numbers —</option>
+              <option>4XS</option><option>3XS</option><option>2XS</option><option>XS</option><option>S</option>
+              <option selected>M</option><option>L</option><option>XL</option><option>2XL</option><option>3XL</option>
+              <option>4XL</option><option>5XL</option><option>6XL</option><option>7XL</option><option>8XL</option><option>9XL</option>
+            </select>
+          </label>
+          <label class="f">Import a set you downloaded (.json)<input type="file" id="ms-import" accept=".json,application/json" /></label>
+        </div>
+        <div id="ms-fields"></div>
+        <button class="btn" id="ms-load">Load standard size</button>
+        <button class="btn secondary" id="ms-save" style="margin-left:8px">Add set to this session</button>
+        <button class="btn secondary" id="ms-download" style="margin-left:8px">Download set (.json)</button>
+        <button class="btn secondary" id="ms-apply" style="margin-left:8px">Use these in the Generator (Tool 13)</button>
+        <div class="result" id="ms-result"></div>
+        <details>
+          <summary>How to take each measurement — the FreeSewing way</summary>
+          <ul class="tight">
+            <li><b>Neck:</b> around the base of the neck, tape snug where a collar sits.</li>
+            <li><b>Chest / bust:</b> around the fullest part, tape level under the arms — breathe out normally, don't hold your breath.</li>
+            <li><b>Waist:</b> at the natural waist (narrowest point, usually just above the navel), snug not tight.</li>
+            <li><b>Hips:</b> around the fullest part of the seat, feet together.</li>
+            <li><b>Shoulder width:</b> shoulder point to shoulder point across the back.</li>
+            <li><b>Back-waist length:</b> base of neck down the spine to the natural waist.</li>
+            <li><b>Arm length:</b> shoulder point to wrist, arm slightly bent, tape over the elbow.</li>
+            <li><b>Bicep / wrist:</b> around the fullest bicep; around the wrist bone.</li>
+            <li><b>Inseam:</b> inside leg, crotch to ankle bone. <b>Outseam:</b> waist to ankle down the outside.</li>
+            <li><b>Height:</b> barefoot, back to a wall. Height drives length proportions in Sewist-style drafting.</li>
+            <li>Measure over thin clothing, twice, and use the smaller reading if they differ slightly. For dolls, measure the doll and use the doll set — every number scales down, ease included.</li>
+          </ul>
+        </details>
+      </section>
+
+      <!-- ============ 16 PROJECTS & TECH PACK ============ -->
+      <section class="tool" id="projects">
+        <div class="tool-head"><div class="tool-num">16</div>
+          <div><h2>Whole-Garment Projects &amp; Tech Pack</h2><div class="fixes">From Nastix Projects · Sewist tech flats &amp; specifications · royalty-free notes</div></div>
+        </div>
+        <p class="why">Nastix Projects put several generators together into one garment: which to draft first, which numbers carry from one pattern to the next, how much fabric the whole thing needs, and the order to sew it in. Pick a project for that plan — then generate the spec sheet a Sewist pattern ships with (their tech flats are vector drawings; here you get the full written specification to download).</p>
+        <div class="grid2">
+          <label class="f">Project
+            <select id="pj-type">
+              <option value="wrapdress">Wrap Dress — bodice + skirt + ties (Nastix)</option>
+              <option value="shirt">Relaxed Shirt — body + sleeve + plackets + collar + cuffs (Nastix)</option>
+              <option value="hoodie">Raglan Hoodie — body + raglan sleeves + hood + bands (Nastix)</option>
+              <option value="tshirtoutfit">T-Shirt + Shorts — knit top + shorts + waistband (Nastix)</option>
+              <option value="dress">Basic Dress — bodice + sleeve + skirt + facings (Nastix)</option>
+            </select>
+          </label>
+          <label class="f">Fabric width
+            <select id="pj-width"><option value="45">45″</option><option value="54">54″</option><option value="60" selected>60″</option></select>
+          </label>
+          <label class="f">Garment name for the spec sheet<input type="text" id="pj-name" value="My wrap dress" /></label>
+          <label class="f">Main fabric<input type="text" id="pj-fabric" value="Viscose challis" /></label>
+          <label class="f">Notions<input type="text" id="pj-notions" value="Matching thread, 1 m light interfacing" /></label>
+          <label class="f">Size / measurement set<span class="hint">Use the bust / waist / hip currently in Tool 13 &amp; 15.</span><input type="text" id="pj-size" value="Made to measure" /></label>
+        </div>
+        <button class="btn" id="pj-run">Plan this project</button>
+        <button class="btn secondary" id="pj-spec" style="margin-left:8px">Download spec sheet (.txt)</button>
+        <div class="result" id="pj-result"></div>
+        <details>
+          <summary>Royalty-free, "sew and sell", and sharing your makes — what each site actually allows</summary>
+          <ul class="tight">
+            <li><b>Sewist:</b> patterns are royalty-free — you may sew and sell bespoke garments for clients, print on demand, or sell patterns you design in Sewist CAD in your own Sewist store. Their shop and social network (pattern search, groups, classes) run on sewist.com — this page links out rather than copying accounts or a marketplace.</li>
+            <li><b>FreeSewing:</b> open-source software and free patterns; the project asks for voluntary support, carries no ads and no tracking. Its community showcase is where makers share finished garments — the checklist below prepares a showcase post anywhere.</li>
+            <li><b>Nastix Patterns:</b> every generator is free to open and use, with no checkout for the working files.</li>
+            <li><b>Showcase checklist:</b> pattern + generator settings used · your measurement set name (not your measurements) · fabric and any fit changes · a flat-lay of the pieces and a worn photo · one thing you'd change next time. That is exactly the information all three communities ask for.</li>
+            <li>None of this changes the licence of a pattern you bought elsewhere — a Zorqi or other seller's terms still govern their files.</li>
+          </ul>
+        </details>
+      </section>
+
+      <!-- ============ THE 18 PROBLEMS ============ -->
+      <section class="tool" id="problems">
+        <div class="tool-head"><div class="tool-num">★</div>
+          <div><h2>The 18 problems, ranked</h2><div class="fixes">Researched 17 Nov 2026 across pattern-company help pages, forums, reviews &amp; buyer complaints</div></div>
+        </div>
+        <p class="why">Ranked by how often each issue leads pattern-company help pages and causes ruined garments. The ranking is qualitative — no source publishes real counts — and Reddit threads and closed Facebook groups couldn't be read directly, so their volume is inferred from secondary sources.</p>
+        <div id="problem-list"></div>
+      </section>
+
+      <footer class="page">
+        <h2>What already exists — and the gaps this fills</h2>
+        <p>Good single-purpose tools exist: <a href="https://www.patternprojector.com/en" target="_blank" rel="noopener">PatternProjector</a> (free projector calibration &amp; stitching), PDF Stitcher (tiled → A0 on desktop), <a href="https://www.sizespan.com" target="_blank" rel="noopener">SizeSpan</a> (size arithmetic if you type both charts in), Sewsy (phone printing), and generic fabric calculators (rectangles only). What none of them does — and what the tools above are built around — is checking <i>your actual file</i> end-to-end: its paper size, test square, layers and whether it's even the right file, then fixing the numbers in one place.</p>
+        <p>Prices quoted for copy-shop printing ($1.39–$6 per A0 sheet in the US, £0.70–£5 in the UK) and the Silhouette Designer Edition upgrade (~$49.99) come from the 17 Nov 2026 research and weren't all verified live that day — treat them as indicative, and confirm at your shop. Pattern terms and adjustment formulas follow the sources linked in each tool.</p>
+        <h2 style="margin-top:18px">The three drafting sites built into Tools 13–16</h2>
+        <p><a href="https://freesewing.eu/" target="_blank" rel="noopener">FreeSewing</a> — free, open-source made-to-measure pattern generation with saved measurement sets and a full editor (paperless mode, seam allowance, units, parts). <a href="https://www.sewist.com/" target="_blank" rel="noopener">Sewist</a> — Sewist CAD parametric drafting, the Mix-and-Match designer, personal sizes 4XS–9XL for women, men, children and dolls, projector PDFs, tech flats and multi-language instructions. <a href="https://nastix-patterns.com/" target="_blank" rel="noopener">Nastix Patterns</a> — 29 free measurement-led generators for blocks and details, with presets, coordinated sets, live preview, SVG / full-size PDF / tiled A4 exports and whole-garment Projects. Tools 13–16 bring those features onto this page; the drafting formulas here are simplified basic-block maths — every generated pattern still needs a toile (test garment) before cutting good fabric, exactly as all three sites advise.</p>
+      </footer>
+    </div>
+
+    <script>
+    "use strict";
+    var $ = function(id){ return document.getElementById(id); };
+    function fmt(n, d){ return Number(n).toFixed(d == null ? 2 : d); }
+    function verdict(kind, title, body){
+      return '<div class="verdict ' + kind + '"><b>' + title + '</b>' + (body || '') + '</div>';
+    }
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+
+    /* ---------- shared PDF page-size classification ---------- */
+    var PAPER = [
+      { name: "A0 (copy-shop / projector sheet)", w: 2384, h: 3370, kind: "A0" },
+      { name: "A1", w: 1684, h: 2384, kind: "large" },
+      { name: "A2", w: 1191, h: 1684, kind: "large" },
+      { name: "A3", w: 842, h: 1191, kind: "large" },
+      { name: "A4", w: 595, h: 842, kind: "A4" },
+      { name: "US Letter", w: 612, h: 792, kind: "Letter" },
+      { name: "US Legal", w: 612, h: 1008, kind: "large" }
+    ];
+    function classifyPage(wPt, hPt){
+      var a = Math.min(wPt, hPt), b = Math.max(wPt, hPt), i, p;
+      for (i = 0; i < PAPER.length; i++){
+        p = PAPER[i];
+        if (Math.abs(a - p.w) <= 10 && Math.abs(b - p.h) <= 10) return p;
+      }
+      return { name: "custom " + fmt(a / 72, 2) + " × " + fmt(b / 72, 2) + " in", kind: "custom" };
+    }
+
+    /* ================= 01 PRE-FLIGHT ================= */
+    $("pf-run").addEventListener("click", function(){
+      var out = $("pf-result"), file = $("pf-file").files[0], paper = $("pf-paper").value;
+      out.className = "result show";
+      if (!file){ out.innerHTML = verdict("bad", "No file chosen", "Pick the pattern PDF you downloaded, then run the check."); return; }
+      if (!window.pdfjsLib){ out.innerHTML = verdict("bad", "PDF reader didn't load", "Check your connection and reload the page."); return; }
+      out.innerHTML = "<p>Reading " + file.name + "…</p>";
+      file.arrayBuffer().then(function(buf){
+        return pdfjsLib.getDocument({ data: buf }).promise;
+      }).then(function(doc){
+        var counts = {}, kinds = {}, first = null, jobs = [], i;
+        var sample = Math.min(doc.numPages, 12);
+        for (i = 1; i <= sample; i++){
+          (function(n){
+            jobs.push(doc.getPage(n).then(function(pg){
+              var v = pg.view, c = classifyPage(v[2] - v[0], v[3] - v[1]);
+              counts[c.name] = (counts[c.name] || 0) + 1;
+              kinds[c.kind] = true;
+              if (n === 1) first = c;
+            }));
+          })(i);
+        }
+        return Promise.all(jobs).then(function(){
+          var layers = [];
+          var ocDone = doc.getOptionalContentConfig ? doc.getOptionalContentConfig().then(function(cfg){
+            var g = cfg && cfg.groups, arr = [];
+            if (Array.isArray(g)) arr = g;
+            else if (g && typeof g.values === "function") arr = Array.from(g.values());
+            else if (g && typeof g === "object") arr = Object.keys(g).map(function(k){ return g[k]; });
+            layers = arr.map(function(x){ return x && (x.name || x.id); }).filter(Boolean);
+          }).catch(function(){}) : Promise.resolve();
+          return ocDone.then(function(){ return { counts: counts, kinds: kinds, first: first, layers: layers, pages: doc.numPages, sampled: sample }; });
+        });
+      }).then(function(r){
+        var html = "<h3>" + file.name + "</h3>";
+        html += "<p><b>" + r.pages + " page" + (r.pages === 1 ? "" : "s") + "</b> · page size: <b>" +
+          Object.keys(r.counts).map(function(k){ return k + (r.sampled < r.pages ? " (first " + r.sampled + " pages)" : ""); }).join(", ") + "</b></p>";
+        var isA0 = !!r.kinds.A0, isHome = !!(r.kinds.A4 || r.kinds.letter || r.kinds.Letter);
+        if (isA0 && !isHome){
+          html += verdict("warn", "This is the copy-shop / projector file",
+            "One huge sheet per page. Do <b>not</b> print it on a home printer — pieces will come out cut off or tiny. Take it to a copy shop (Tool 11) or project it (Tool 9). If you need a home-print version, look in the ZIP for the A4 / Letter file (Tool 2).");
+        } else if (isHome && !isA0){
+          html += verdict("ok", "This is a print-at-home file", "Tiled pages for your home printer. Print at 100% / Actual Size, then check the test square with Tool 3 before taping (Tool 8).");
+          if (r.first && ((paper === "A4" && r.first.kind === "Letter") || (paper === "Letter" && r.first.kind === "A4"))){
+            html += verdict("bad", "Paper mismatch: file is " + r.first.name + ", your printer has " + paper,
+              "Printing anyway invites a silent shrink to ~94–96%. Look for the " + paper + " version in the download, or send the A0 file to a copy shop instead.");
+          } else if (paper === "shop"){
+            html += verdict("warn", "Sending a tiled file to a copy shop?",
+              "Shops expect the single A0 file — a tiled file gets printed page-by-page at per-page prices, or refused. Find the copyshop file in your ZIP (Tool 2).");
+          }
+        } else if (isA0 && isHome){
+          html += verdict("warn", "Mixed file", "This PDF mixes home-print pages and large sheets. Print only the pages that match your route, and check page size per page in your print dialog.");
+        } else {
+          html += verdict("warn", "Unusual page size (" + (r.first ? r.first.name : "?") + ")",
+            "Not a standard pattern size. It may be an instructions booklet (fine to print any way) or a non-standard pattern sheet — check for a test square before trusting it.");
+        }
+        if (r.layers.length){
+          html += verdict("ok", r.layers.length + " PDF layers found", "Layers: <span class='mono'>" + r.layers.join(", ") +
+            "</span><br/>Each size usually lives on its own layer. Only Adobe Acrobat Reader (desktop) prints a single layer reliably — browsers, Preview and phone readers print all sizes overlaid. In Reader: open the Layers panel, switch off every size but yours, then print.");
+        } else {
+          html += verdict("warn", "No size layers detected",
+            "Either this file isn't layered (all sizes print together — trace just your size lines carefully) or the layers couldn't be read. If the print looks like spaghetti, it isn't layered.");
+        }
+        html += '<p class="note">Next steps: measure the test square (Tool 3) · pick your size (Tool 4) · plan the taping (Tool 8).</p>';
+        out.innerHTML = html;
+      }).catch(function(){
+        out.innerHTML = verdict("bad", "That file couldn't be read",
+          "It may be corrupt, password-protected, or an incomplete download (a file ending in <span class='mono'>_file</span> usually is). Re-download it from the seller's link — on Etsy, sign in on a computer browser, not the app, since the app can't download digital items.");
+      });
+    });
+
+    /* ================= 02 ZIP FINDER ================= */
+    function classifyName(name){
+      var n = name.toLowerCase();
+      if (/(instruction|tutorial|guide|readme|how.?to|sewing.?steps)/.test(n)) return { label: "Instructions — read first, print optional", kind: "info" };
+      if (/(copyshop|copy.?shop|a0|print.?shop|projector|large.?format)/.test(n)) return { label: "Copy-shop / projector file (A0) — one big sheet", kind: "A0" };
+      if (/(a4)/.test(n)) return { label: "Print at home — A4 paper", kind: "A4" };
+      if (/(letter|us.?letter)/.test(n)) return { label: "Print at home — US Letter paper", kind: "Letter" };
+      if (/(\.pdf)$/.test(n)) return { label: "PDF — check its page size in Tool 1", kind: "pdf" };
+      return { label: "Other file", kind: "other" };
+    }
+    $("zip-run").addEventListener("click", function(){
+      var out = $("zip-result"), file = $("zip-file").files[0], mode = $("zip-mode").value;
+      out.className = "result show";
+      if (!file){ out.innerHTML = verdict("bad", "No ZIP chosen", "Pick the ZIP your pattern arrived in."); return; }
+      if (!window.JSZip){ out.innerHTML = verdict("bad", "ZIP reader didn't load", "Check your connection and reload the page."); return; }
+      out.innerHTML = "<p>Opening " + file.name + "…</p>";
+      JSZip.loadAsync(file).then(function(zip){
+        var names = Object.keys(zip.files).filter(function(n){ return !zip.files[n].dir && n.indexOf("__MACOSX") !== 0; });
+        if (!names.length){ out.innerHTML = verdict("bad", "The ZIP looks empty", "Re-download it — an interrupted download is the usual cause."); return; }
+        var rows = "", pick = null, want = mode === "home" ? null : "A0";
+        names.sort().forEach(function(n){
+          var c = classifyName(n.split("/").pop());
+          var isPick = false;
+          if (mode === "home" && (c.kind === "A4" || c.kind === "Letter")) isPick = true;
+          if (mode !== "home" && c.kind === "A0") isPick = true;
+          if (isPick && !pick) pick = n.split("/").pop();
+          rows += "<tr><td class='mono'>" + n.split("/").pop() + "</td><td>" + c.label + (isPick ? " &nbsp;<b>← print this one</b>" : "") + "</td></tr>";
+        });
+        var html = "<h3>" + names.length + " file" + (names.length === 1 ? "" : "s") + " inside</h3>";
+        html += '<div class="scrollx"><table class="data"><thead><tr><th>File</th><th>What it is</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+        if (pick) html += verdict("ok", "Print this one: " + pick, mode === "home" ? "Then run it through Tool 1 and measure the test square (Tool 3) before taping anything." : "Take it to the shop with the script in Tool 11 — and check the test square before you pay.");
+        else html += verdict("warn", "No obvious match for your print route", "If every PDF is unlabelled, run the largest one through Tool 1 — its page size tells you exactly what it is.");
+        html += '<p class="note">Cup-size and view variants (e.g. "C-D cup", "View B") are separate print-at-home files — pick the one matching your body and the version you\'re sewing.</p>';
+        out.innerHTML = html;
+      }).catch(function(){
+        out.innerHTML = verdict("bad", "That ZIP couldn't be opened", "It may be an incomplete download. Re-download from the seller's link on a computer — Etsy's app can't download digital items at all.");
+      });
+    });
+
+    /* ================= 03 SCALE FIX ================= */
+    $("sc-run").addEventListener("click", function(){
+      var out = $("sc-result");
+      var expected = parseFloat($("sc-expected").value), measured = parseFloat($("sc-measured").value), body = parseFloat($("sc-body").value);
+      out.className = "result show";
+      if (!measured || measured <= 0){ out.innerHTML = verdict("bad", "Enter your ruler measurement", "Measure the printed test square in inches and type what the ruler actually says — e.g. 0.94."); return; }
+      var actual = measured / expected * 100, fix = expected / measured * 100, off = Math.abs(100 - actual);
+      var html = "";
+      if (off <= 1){
+        html += verdict("ok", "Your scale is right", "Printing at <b>" + fmt(actual, 1) + "%</b> — within 1% of true size. Print the whole pattern at 100% / Actual Size and go.");
+      } else {
+        html += "<p>Your printer is running at</p><p class='big'>" + fmt(actual, 1) + "%</p>";
+        html += verdict("warn", "Print at this custom scale instead", "<span class='big'>" + fmt(fix, 1) + "%</span><br/>In the print dialog: choose <b>Custom Scale</b> (not 'Fit to Page'), type <b>" + fmt(fix, 1) + "</b>, print one page, and measure the square again before printing the rest.");
+        if (body > 0){
+          html += verdict("bad", "What the error would have done", "Left uncorrected, a " + fmt(body, 1) + "″ measurement would have cut at <b>" + fmt(body * measured / expected, 2) + "″</b> — " + fmt(Math.abs(body - body * measured / expected), 2) + "″ " + (measured < expected ? "too small" : "too big") + ". That's a whole size or more across a bodice.");
+        }
+        html += '<p class="note">Usual culprits: "Fit to Page" or "Shrink oversized pages" ticked, "Choose paper source by PDF page size" on, or printing from a browser instead of Adobe Acrobat Reader.</p>';
+      }
+      out.innerHTML = html;
+    });
+
+    /* ================= 04 SIZE & BLEND ================= */
+    var SAMPLE_CHART = [
+      ["6", 30.5, 23, 32.5], ["8", 31.5, 24, 33.5], ["10", 32.5, 25, 34.5], ["12", 34, 26.5, 36],
+      ["14", 36, 28, 38], ["16", 38, 30, 40], ["18", 40, 32, 42], ["20", 42, 34, 44], ["22", 44, 37, 47]
+    ];
+    (function(){
+      var tb = $("sz-chart").querySelector("tbody"), html = "";
+      SAMPLE_CHART.forEach(function(r, i){
+        html += "<tr><td><b>" + r[0] + "</b></td>" +
+          '<td><input type="number" step="0.25" data-r="' + i + '" data-c="1" value="' + r[1] + '"/></td>' +
+          '<td><input type="number" step="0.25" data-r="' + i + '" data-c="2" value="' + r[2] + '"/></td>' +
+          '<td><input type="number" step="0.25" data-r="' + i + '" data-c="3" value="' + r[3] + '"/></td></tr>';
+      });
+      tb.innerHTML = html;
+    })();
+    function pickSize(chart, col, val){
+      var best = null, bestDiff = 1e9, i, d;
+      for (i = 0; i < chart.length; i++){ d = Math.abs(chart[i][col] - val); if (d < bestDiff){ bestDiff = d; best = chart[i]; } }
+      var between = null;
+      for (i = 0; i < chart.length - 1; i++){
+        if (val > chart[i][col] && val < chart[i + 1][col]) between = [chart[i][0], chart[i + 1][0]];
+      }
+      return { size: best[0], between: between };
+    }
+    $("sz-run").addEventListener("click", function(){
+      var out = $("sz-result"), bust = parseFloat($("sz-bust").value), waist = parseFloat($("sz-waist").value),
+          hip = parseFloat($("sz-hip").value), high = parseFloat($("sz-highbust").value);
+      out.className = "result show";
+      if (!bust && !waist && !hip){ out.innerHTML = verdict("bad", "Enter at least one measurement", "Measure over the fullest part of bust and hips, and at your natural waist — snug, not tight."); return; }
+      var chart = SAMPLE_CHART.map(function(r){ return r.slice(); });
+      $("sz-chart").querySelectorAll("input").forEach(function(inp){
+        var v = parseFloat(inp.value); if (!isNaN(v)) chart[+inp.getAttribute("data-r")][+inp.getAttribute("data-c")] = v;
+      });
+      var rows = [], picks = [];
+      function addRow(label, val, col){
+        if (!val) return;
+        var p = pickSize(chart, col, val);
+        picks.push({ label: label, size: p.size });
+        rows += "<tr><td>" + label + "</td><td>" + fmt(val, 2) + "″</td><td><b>Size " + p.size + "</b>" +
+          (p.between ? " <span class='note'>(you fall between " + p.between[0] + " and " + p.between[1] + " — trace both lines)</span>" : "") + "</td></tr>";
+      }
+      addRow("Bust", bust, 1); addRow("Waist", waist, 2); addRow("Hip", hip, 3);
+      var html = '<div class="scrollx"><table class="data"><thead><tr><th>Body point</th><th>You</th><th>Your size</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+      var sizes = picks.map(function(p){ return p.size; });
+      if (new Set(sizes).size > 1){
+        html += verdict("warn", "Blend path: " + picks.map(function(p){ return p.label + " " + p.size; }).join(" → "),
+          "Totally normal — most bodies span 2–3 pattern sizes. Trace your size line at each point and draw a smooth, gradual curve between them on the pattern pieces. No sharp angles, and check that seams sewn together stay the same length.");
+      } else if (picks.length){
+        html += verdict("ok", "One size throughout: " + sizes[0], "Trace size " + sizes[0] + " everywhere — no blending needed.");
+      }
+      if (high > 0 && bust > 0){
+        var diff = bust - high;
+        html += '<p class="note">High bust note: your full bust is ' + fmt(diff, 2) + '″ larger than your high bust. Patterns are drafted for roughly a 2″ difference (B cup). ' +
+          (diff > 2.5 ? "Yours is bigger — pick the size by your <b>high bust</b> for a better neck and shoulder fit, then add the difference at the bust with an FBA (Tool 5)." :
+           "Close to the drafted difference, so picking by full bust is fine.") + "</p>";
+      }
+      html += '<p class="note">Reminder: if you edited the sample chart, these answers use your numbers. Ease (how loose the garment wears) is the finished-garment measurement minus your body measurement — check the pattern\'s finished measurements before cutting good fabric.</p>';
+      out.innerHTML = html;
+    });
+
+    /* ================= 05 FIT (FBA + LENGTH) ================= */
+    $("fit-run").addEventListener("click", function(){
+      var out = $("fit-result"), full = parseFloat($("fba-full").value), high = parseFloat($("fba-high").value),
+          pat = parseFloat($("ln-pat").value), you = parseFloat($("ln-you").value), html = "";
+      out.className = "result show";
+      if (full > 0 && high > 0){
+        var perSide = (full - high - 2) / 2;
+        if (perSide <= 0){
+          html += verdict("ok", "No FBA needed", "Your full-to-high-bust difference is " + fmt(full - high, 2) + "″ — at or under the ~2″ (B cup) most patterns are drafted for. Choose your size by full bust.");
+        } else {
+          html += "<p>Full Bust Adjustment — add per side:</p><p class='big'>" + fmt(perSide, 2) + "″</p>";
+          html += verdict("warn", "How to use it", "Pick your size by <b>high bust</b> (" + fmt(high, 1) + "″), then slash-and-spread the front bodice piece to add <b>" + fmt(perSide, 2) + "″ per side</b> at the bust point (" + fmt(perSide * 2, 2) + "″ total across the front). The formula: (full bust − high bust − 2″) ÷ 2, per side. Make a toile (muslin) first — an FBA this size changes dart size and armhole shape.");
+          if (perSide < 0.375) html += '<p class="note">That\'s a small adjustment — under 3/8″ per side, many sewists simply sew the size up and let the toile decide.</p>';
+        }
+      }
+      if (pat > 0 && you > 0){
+        var d = you - pat;
+        if (Math.abs(d) < 0.25) html += verdict("ok", "Length matches", "Your back-waist length is within 1/4″ of the pattern's — no length adjustment needed.");
+        else html += verdict(d > 0 ? "warn" : "warn", (d > 0 ? "Lengthen" : "Shorten") + " the bodice by " + fmt(Math.abs(d), 2) + "″",
+          "Use the pattern's printed lengthen/shorten lines — spread the pieces apart (lengthen) or overlap them (shorten) by " + fmt(Math.abs(d), 2) + "″, then re-draw the side seams smooth. Apply the same thinking to sleeves and trouser rise: compare the pattern's finished length to the body part, and adjust at the marked lines, never at the hem alone.");
+      }
+      if (!html) html = verdict("bad", "Nothing to calculate yet", "Enter full + high bust for the FBA amount, and/or the two back-waist lengths for the length adjustment.");
+      out.innerHTML = html;
+    });
+
+    /* ================= 06 SEAM ALLOWANCE ================= */
+    $("sa-run").addEventListener("click", function(){
+      var out = $("sa-result"), pat = parseFloat($("sa-pattern").value), sew = parseFloat($("sa-sew").value),
+          seams = parseInt($("sa-seams").value, 10);
+      out.className = "result show";
+      if (pat === 0){
+        out.innerHTML = verdict("bad", "This pattern includes NO seam allowance",
+          "The printed lines are the stitching lines. You must add your allowance (commonly 5/8″) around every piece before cutting — cutting on the printed line makes the garment smaller by twice the allowance at every seam.");
+        return;
+      }
+      var diff = sew - pat, total = -2 * diff * seams, html = "";
+      if (Math.abs(diff) < 0.01){
+        html = verdict("ok", "You're sewing the allowance the pattern intends", "No size change. Mark the stitching line or use the matching presser-foot guide so you actually hold " + fmt(sew, 3) + "″ all the way.");
+      } else {
+        html = "<p>Sewing at " + fmt(sew, 3) + "″ instead of " + fmt(pat, 3) + "″ changes the finished size by</p><p class='big'>" +
+          (total > 0 ? "+" : "−") + fmt(Math.abs(total), 2) + "″</p>";
+        html += verdict(total < 0 ? "bad" : "warn",
+          total < 0 ? "Your garment comes out smaller" : "Your garment comes out bigger",
+          "Each seam moves the stitching line by " + fmt(Math.abs(diff), 3) + "″ on both pieces it joins, across " + seams + " seams around the body. " +
+          (total < 0 ? "That's enough to turn a comfortable fit into one that strains — sew the allowance printed in the instructions (" + fmt(pat, 3) + "″), or deliberately re-mark your stitching lines." :
+                      "Extra ease you didn't plan — check the fit at the toile stage, or sew the pattern's stated " + fmt(pat, 3) + "″."));
+      }
+      out.innerHTML = html;
+    });
+    </script>
+
+    <script>
+    "use strict";
+    /* ================= 07 YARDAGE ================= */
+    var ydCount = 0;
+    function ydRow(name, w, l, n){
+      ydCount++;
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td><input type='text' class='yd-name' value='" + name + "' style='width:110px'/></td>" +
+        "<td><input type='number' class='yd-w' step='0.5' min='0' value='" + w + "'/></td>" +
+        "<td><input type='number' class='yd-l' step='0.5' min='0' value='" + l + "'/></td>" +
+        "<td><input type='number' class='yd-n' step='1' min='1' value='" + n + "' style='width:56px'/></td>" +
+        "<td><button class='btn secondary yd-del' style='min-height:36px;padding:4px 10px'>✕</button></td>";
+      tr.querySelector(".yd-del").addEventListener("click", function(){ tr.remove(); });
+      $("yd-pieces").querySelector("tbody").appendChild(tr);
+    }
+    ydRow("Bodice front", 16, 24, 1); ydRow("Bodice back", 16, 24, 1); ydRow("Sleeve", 14, 24, 2); ydRow("Skirt panel", 28, 30, 2);
+    $("yd-add").addEventListener("click", function(){ ydRow("Piece", 12, 18, 1); });
+    $("yd-run").addEventListener("click", function(){
+      var out = $("yd-result"), W = parseFloat($("yd-width").value), waste = parseFloat($("yd-waste").value);
+      out.className = "result show";
+      var pieces = [];
+      $("yd-pieces").querySelectorAll("tbody tr").forEach(function(tr){
+        var w = parseFloat(tr.querySelector(".yd-w").value), l = parseFloat(tr.querySelector(".yd-l").value),
+            n = parseInt(tr.querySelector(".yd-n").value, 10) || 0, nm = tr.querySelector(".yd-name").value || "Piece", i;
+        if (w > 0 && l > 0) for (i = 0; i < n; i++) pieces.push({ name: nm, w: w, l: l });
+      });
+      if (!pieces.length){ out.innerHTML = verdict("bad", "No pieces entered", "Add at least one piece with a width and length."); return; }
+      var tooWide = pieces.filter(function(p){ return Math.min(p.w, p.l) > W; });
+      if (tooWide.length){
+        out.innerHTML = verdict("bad", "A piece doesn't fit this fabric width",
+          "<b>" + tooWide[0].name + "</b> is wider than " + W + "″ fabric even turned sideways. Use wider fabric, or plan a seam in that piece.");
+        return;
+      }
+      /* simple shelf layout: orient each piece with its shorter side across the fabric, pack rows */
+      var items = pieces.map(function(p){ return { name: p.name, across: Math.min(p.w, p.l), along: Math.max(p.w, p.l) }; });
+      items.sort(function(a, b){ return b.along - a.along; });
+      var rows = [], i, j;
+      items.forEach(function(it){
+        var placed = false;
+        for (j = 0; j < rows.length; j++){
+          if (rows[j].used + it.across <= W){ rows[j].used += it.across; rows[j].len = Math.max(rows[j].len, it.along); placed = true; break; }
+        }
+        if (!placed) rows.push({ used: it.across, len: it.along });
+      });
+      var totalLen = rows.reduce(function(s, r){ return s + r.len; }, 0);
+      var withWaste = totalLen * (1 + waste), yards = withWaste / 36;
+      var buy = Math.ceil(yards * 4) / 4;
+      out.innerHTML = "<p>Laid out on " + W + "″ fabric in " + rows.length + " row" + (rows.length === 1 ? "" : "s") + ", your pieces need</p>" +
+        "<p class='big'>" + fmt(yards, 2) + " yards</p>" +
+        verdict("ok", "Buy " + fmt(buy, 2) + " yards (" + fmt(buy * 36, 0) + "″ / " + fmt(buy * 0.9144, 2) + " m)",
+          "That's " + fmt(totalLen, 1) + "″ of layout plus " + Math.round(waste * 100) + "% safety. Cut a toile first if the fabric is precious — and if the print has a direction or nap, keep every piece facing the same way, which is what the 15% allowance is for.");
+    });
+
+    /* ================= 08 ASSEMBLY ================= */
+    $("asm-run").addEventListener("click", function(){
+      var out = $("asm-result"), cols = Math.max(1, Math.min(14, parseInt($("asm-cols").value, 10) || 1)),
+          rows = Math.max(1, Math.min(14, parseInt($("asm-rows").value, 10) || 1)),
+          paper = $("asm-paper").value, pw = paper === "A4" ? 8.27 : 8.5, ph = paper === "A4" ? 11.69 : 11;
+      out.className = "result show";
+      var total = cols * rows, cells = "", i;
+      for (i = 1; i <= total; i++) cells += '<div class="asm-cell" data-on="1">' + i + "</div>";
+      out.innerHTML = "<p><b>" + total + " pages</b> · finished sheet ≈ <b>" + fmt(cols * pw, 1) + " × " + fmt(rows * ph, 1) + "″</b> (" +
+        fmt(cols * pw * 2.54, 0) + " × " + fmt(rows * ph * 2.54, 0) + " cm) before trimming. Tap a page to mark it unneeded — pages for other views or pieces you aren't sewing.</p>" +
+        '<div class="asm-grid" id="asm-grid" style="grid-template-columns:repeat(' + cols + ',1fr)">' + cells + "</div>" +
+        '<p class="note" id="asm-count">Pages to tape: ' + total + "</p>";
+      $("asm-grid").querySelectorAll(".asm-cell").forEach(function(c){
+        c.addEventListener("click", function(){
+          var on = c.getAttribute("data-on") === "1";
+          c.setAttribute("data-on", on ? "0" : "1"); c.classList.toggle("skip", on);
+          var left = $("asm-grid").querySelectorAll('.asm-cell[data-on="1"]').length;
+          $("asm-count").textContent = "Pages to tape: " + left + " of " + total;
+        });
+      });
+    });
+
+    /* ================= 09 CALIBRATOR ================= */
+    (function(){
+      var slider = $("cal-slider"), square = $("cal-square"), label = $("cal-label"), pct = $("cal-pct"), target = $("cal-target");
+      function draw(){
+        var inches = parseFloat(target.value), px = inches * 96 * parseFloat(slider.value) / 100;
+        square.style.width = px + "px"; square.style.height = px + "px";
+        label.textContent = inches === 1 ? "1″" : (inches === 2 ? "2″" : "5 cm");
+        pct.textContent = fmt(parseFloat(slider.value), 1) + "%";
+      }
+      slider.addEventListener("input", draw); target.addEventListener("change", draw); draw();
+    })();
+
+    /* ================= 10 SVG CHECKER ================= */
+    $("svg-run").addEventListener("click", function(){
+      var out = $("svg-result"), file = $("svg-file").files[0];
+      out.className = "result show";
+      if (!file){ out.innerHTML = verdict("bad", "No SVG chosen", "Pick the .svg file you plan to upload to Design Space."); return; }
+      file.text().then(function(text){
+        var doc = new DOMParser().parseFromString(text, "image/svg+xml");
+        if (doc.querySelector("parsererror")){ out.innerHTML = verdict("bad", "Not a valid SVG", "The file couldn't be parsed as SVG — re-export it from your vector editor."); return; }
+        var paths = doc.querySelectorAll("path").length;
+        var shapes = doc.querySelectorAll("path, rect, circle, ellipse, line, polyline, polygon").length;
+        var sizeMB = file.size / 1048576, html = "<h3>" + file.name + "</h3>", problems = 0;
+        function check(bad, title, okText, badText){
+          if (bad) problems++;
+          return verdict(bad ? "bad" : "ok", title, bad ? badText : okText);
+        }
+        html += check(sizeMB > 20, "File size: " + fmt(sizeMB, 2) + " MB", "Under Cricut's 20 MB limit.", "Over Cricut's 20 MB limit — Design Space will reject it. Simplify paths or split the file per piece.");
+        html += check(paths > 5000, "Paths: " + paths.toLocaleString(), "Under the 5,000-path limit.", "Over the 5,000-path limit. Simplify / smooth the paths in your editor, or export one file per pattern piece.");
+        html += check(doc.querySelectorAll("pattern").length > 0, "Pattern fills", "None found.", "Pattern fills are unsupported — replace them with solid fills or remove them before upload.");
+        html += check(doc.querySelectorAll("clipPath").length > 0, "Clipping paths", "None found.", "Clipping paths are unsupported — release/expand them in your editor first.");
+        html += check(doc.querySelectorAll("text").length > 0, "Live text", "No live text.", "Text is still editable text — convert it to outlines (piece names matter, so don't just delete it).");
+        html += check(doc.querySelectorAll("image").length > 0, "Embedded / linked images", "None found.", "Images inside an SVG are unsupported for cutting — remove or trace them.");
+        var vb = doc.querySelector("svg").getAttribute("viewBox");
+        html += '<p class="note">Cut shapes found: ' + shapes + (vb ? " · viewBox " + vb : "") +
+          ". <b>Scale check you must still do by hand:</b> open the file in your design software and measure a piece you know — converters don't guarantee 1:1 scale, and no checker can see your printed test square. Silhouette Studio Basic can't open SVG at all (Designer Edition upgrade, ~$49.99, or use DXF).</p>";
+        html += problems === 0 ? verdict("ok", "Ready to upload", "This file passes every Cricut limit checked here.") : "";
+        out.innerHTML = html;
+      }).catch(function(){ out.innerHTML = verdict("bad", "Couldn't read that file", "Try re-exporting it as a plain SVG."); });
+    });
+
+    /* ================= 11 COPY SHOP ================= */
+    $("cs-run").addEventListener("click", function(){
+      var out = $("cs-result"), sheets = Math.max(1, parseInt($("cs-sheets").value, 10) || 1), region = $("cs-region").value;
+      out.className = "result show";
+      var lo = region === "us" ? 1.39 : 0.70, hi = region === "us" ? 6 : 5, sym = region === "us" ? "$" : "£";
+      out.innerHTML = "<p>Typical cost for " + sheets + " A0 sheet" + (sheets === 1 ? "" : "s") + ":</p>" +
+        "<p class='big'>" + sym + fmt(lo * sheets, 2) + " – " + sym + fmt(hi * sheets, 2) + "</p>" +
+        '<p class="note">Range from the 17 Nov 2026 research (' + sym + fmt(lo, 2) + "–" + sym + fmt(hi, 2) +
+        " per sheet across mail-order and walk-in shops; not every price was verified live that day). Mail-order adds shipping; walk-in colour costs more than black &amp; white. Printed patterns are non-refundable — measure the test square at the counter.</p>";
+    });
+
+    /* ================= 12 GLOSSARY ================= */
+    var GLOSSARY = [
+      ["Ease", "The difference between the finished garment's measurement and your body's. Positive ease = room to move; negative ease = stretch fabric worn tight. Too little ease is the #1 reason a 'right size' garment feels wrong."],
+      ["Grainline", "The arrow printed on each piece. It must sit parallel to the fabric's selvedge (woven edge) or the garment will twist and hang wrong."],
+      ["Notch", "The small triangles or marks on seam edges. Matching notches are how you know two pieces are aligned correctly — and which piece is which."],
+      ["Seam allowance", "The fabric between the stitching line and the cut edge. Patterns state it (5/8″, 3/8″, 1/2″…) and it is not universal — see Tool 6."],
+      ["Grading (between sizes)", "Moving from one size to another across a pattern — e.g. size 12 at the bust flowing to 16 at the hip. See the blend path in Tool 4."],
+      ["Full Bust Adjustment (FBA)", "Adding room at the bust only, so shoulders and back still fit. Amount per side: (full bust − high bust − 2″) ÷ 2 — Tool 5 calculates it."],
+      ["High bust", "Measurement around the chest above the bust, under the arms. The better number for choosing a top/dress size when your cup is larger than a B."],
+      ["Toile / muslin", "A test garment sewn in cheap fabric to check fit before cutting the good fabric. Skipping it is how FBA and blending mistakes become expensive."],
+      ["Nap", "A fabric surface that looks different in one direction (velvet, corduroy, many prints). All pieces must face the same way, which uses more fabric."],
+      ["Selvedge", "The tightly woven finished edge of the fabric. Grainline arrows are measured from it; never cut pieces off-grain to save fabric."],
+      ["Cut on fold", "A piece placed with one edge on folded fabric, so it opens out as one symmetrical piece. Projector users must unfold these digitally or flip and mark by hand."],
+      ["Test square", "The small square (1″ or 10 cm) printed on page 1. Measure it after printing — it is the only proof your scale is right. Tool 3 fixes it when it's off."],
+      ["A0 / copyshop file", "The pattern as one huge sheet (A0 = 841 × 1189 mm) for a print shop or projector. The opposite of the tiled print-at-home file."],
+      ["Layers", "A PDF feature putting each size on its own switchable layer, so you print only your size. Only Adobe Acrobat Reader (desktop) handles it reliably."],
+      ["Basting", "Long, temporary stitches to hold pieces for a fitting. Made to be removed — never skip it on a first toile."],
+      ["Dart", "The triangular fold sewn into a piece to shape flat fabric over curves (bust, waist). An FBA usually makes the dart bigger — that's expected."]
+    ];
+    function renderGlossary(q){
+      var list = GLOSSARY.filter(function(g){ return !q || (g[0] + " " + g[1]).toLowerCase().indexOf(q.toLowerCase()) !== -1; });
+      $("gloss-list").innerHTML = list.length ? list.map(function(g){
+        return '<div class="gloss-item"><b>' + g[0] + '</b><p>' + g[1] + '</p></div>';
+      }).join("") : '<p class="note">No term matches — try "ease", "notch" or "grainline".</p>';
+    }
+    renderGlossary("");
+    $("gloss-q").addEventListener("input", function(){ renderGlossary(this.value); });
+
+    /* ================= THE 18 PROBLEMS ================= */
+    var PROBLEMS = [
+      ["Printing at the wrong scale / test square fails", "\"Fit to Page\" shrinks patterns to ~94–96%; 1/8″ off on a 1″ square is 4″ off on a 32″ waist.", "Tool 1 + Tool 3", "#preflight"],
+      ["Choosing the right size", "Shop size ≠ pattern size (RTW 12 ≈ pattern 16–18); bust, waist and hip land on three different sizes.", "Tool 4", "#size"],
+      ["Assembling / taping tiled pages", "20–60 pages to trim, align and tape; the #1 reason printed patterns never get sewn.", "Tool 8", "#assembly"],
+      ["PDF layers — can't print only your size", "Only desktop Adobe Reader handles layers; everyone else prints all sizes overlaid.", "Tool 1 (layer check)", "#preflight"],
+      ["A4 vs US Letter mismatch", "The wrong paper silently shrinks or crops the file — a top complaint for international buyers.", "Tool 1 + Tool 2", "#preflight"],
+      ["Grading / blending between sizes", "Bust 10, waist 12, hips 14 is normal — blending by hand is manual and intimidating.", "Tool 4", "#size"],
+      ["Instructions hard to follow", "Big-Four shorthand assumes knowledge; missing steps and unlabelled notches stall beginners.", "Tool 12", "#words"],
+      ["File won't open / ZIP / wrong file", "Phones can't open ZIPs, the Etsy app can't download at all, and the copyshop file prints tiny at home.", "Tool 2", "#zip"],
+      ["Projector setup & calibration", "Sub-720p projectors distort; keystone bends lines; one bumped scroll wheel ruined a suit by 10%.", "Tool 9", "#calibrate"],
+      ["Copy-shop (A0) printing", "Shops handed the tiled file charge per page or refuse; printed patterns are non-refundable.", "Tool 11", "#copyshop"],
+      ["Plus-size / petite / tall / FBA fit", "Patterns are drafted for a B cup and average height; everyone else must adjust by hand.", "Tool 5", "#fit"],
+      ["Seam allowances", "Assuming 5/8″ on a 3/8″ pattern (or the reverse) quietly changes the finished size.", "Tool 6", "#seam"],
+      ["Fabric yardage & layout", "Charts assume perfect cutting; people run out of fabric halfway through the last sleeve.", "Tool 7", "#yardage"],
+      ["Pieces missing / notches confusing", "Reviews cite missing pieces, extra pieces and notches that aren't labelled or don't match.", "Tool 12", "#words"],
+      ["PDF → SVG/DXF for Cricut / Silhouette", "Cricut rejects fills, clips, text, >5,000 paths or >20 MB; Silhouette Basic can't open SVG.", "Tool 10", "#svg"],
+      ["Refunds & seller support", "Digital patterns are generally non-refundable; Etsy sometimes refunds sellers anyway.", "Tool 12", "#words"],
+      ["Paper patterns: tissue tears & storage", "Tissue tears with use; used patterns arrive missing pieces. Tracing is the fix.", "Tool 12", "#words"],
+      ["Printing from phone / no printer", "No scale control and no layers on phones — copy shop, projector or a phone app are the routes.", "Tool 2 + Tool 12", "#zip"]
+    ];
+    $("problem-list").innerHTML = PROBLEMS.map(function(p, i){
+      return '<div class="problem"><div class="rank">' + (i + 1) + '</div><div><h3>' + p[0] + '</h3><p>' + p[1] +
+        '</p><a class="tag" href="' + p[3] + '">' + p[2] + '</a></div></div>';
+    }).join("");
+    </script>
+
+    <script>
+    "use strict";
+    var $$ = function(id){ return document.getElementById(id); };
+    function fmt2(n, d){ return Number(n).toFixed(d == null ? 2 : d); }
+    function verdict2(kind, title, body){ return '<div class="verdict ' + kind + '"><b>' + title + '</b>' + (body || '') + '</div>'; }
+    function download(name, text, type){
+      var blob = new Blob([text], { type: type || "text/plain" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    }
+    var lastSVG = "", lastDXF = "", lastSpec = "";
+
+    /* ================= 13 GENERATOR ================= */
+    var PRESET_EASE = { fitted: 2, classic: 3, relaxed: 5, oversized: 7, aline: 3 };
+    document.querySelectorAll("#gen-parts .chip").forEach(function(ch){
+      ch.addEventListener("click", function(){ ch.classList.toggle("on"); });
+    });
+    function includedParts(){
+      var set = {};
+      document.querySelectorAll("#gen-parts .chip").forEach(function(ch){ if (ch.classList.contains("on")) set[ch.getAttribute("data-part")] = true; });
+      return set;
+    }
+    /* piece outline paths, drawn in local inch coords, origin top-left */
+    function bodicePath(w, h, front){
+      var neckW = w * 0.32, neckD = front ? h * 0.16 : h * 0.05, sh = h * 0.10;
+      return "M0," + h + " L0," + neckD + " Q0," + (neckD * 0.3) + " " + neckW + "," + (front ? neckD * 0.55 : 2) +
+        " L" + (w - 1.2) + "," + sh + " Q" + w + "," + (h * 0.28) + " " + (w - 0.4) + "," + (h * 0.42) +
+        " L" + w + "," + h + " Z";
+    }
+    function skirtPath(w, h, flare){
+      var hemW = w + (flare || 0);
+      return "M0,0 L" + w + ",0 L" + hemW + "," + h + " L" + (-(flare || 0) * 0.4) + "," + h + " Z";
+    }
+    function sleevePath(w, h){
+      var cap = Math.min(w * 0.55, h * 0.35);
+      return "M0," + cap + " Q" + (w * 0.25) + ",-" + (cap * 0.35) + " " + (w * 0.5) + ",0 Q" + (w * 0.75) + ",-" + (cap * 0.35) + " " + w + "," + cap +
+        " L" + (w - 0.8) + "," + h + " L0.8," + h + " Z";
+    }
+    function pantsPath(w, h, shorts){
+      var ankle = Math.max(6, w * 0.62), inseamStart = h * (shorts ? 0.45 : 0.38);
+      return "M0,0 L" + w + ",0 L" + w + "," + inseamStart + " L" + (w - (w - ankle) / 2) + "," + h + " L" + ((w - ankle) / 2) + "," + h + " L0," + (inseamStart + h * 0.10) + " Q" + (w * 0.18) + "," + (inseamStart - h * 0.06) + " 0," + (inseamStart - h * 0.12) + " Z";
+    }
+    function draftPieces(){
+      var type = $$("gen-type").value, preset = $$("gen-preset").value;
+      var bust = parseFloat($$("gen-bust").value) || 38, waist = parseFloat($$("gen-waist").value) || 30,
+          hip = parseFloat($$("gen-hip").value) || 40, back = parseFloat($$("gen-back").value) || 16.5,
+          len = parseFloat($$("gen-len").value) || 24, bicep = parseFloat($$("gen-bicep").value) || 12;
+      var ease = PRESET_EASE[preset] || 3, inc = includedParts(), pieces = [], notes = [];
+      function add(key, name, w, h, path, qty, note){ if (inc[key]) pieces.push({ name: name, w: w, h: h, path: path, qty: qty, note: note || "" }); }
+      var bw = bust / 4 + ease / 4, sw = hip / 4 + 0.75;
+      if (type === "bodice" || type === "dress"){
+        var totalH = type === "dress" ? back + len : back + 0.5;
+        function dressPath(w, front){
+          if (type !== "dress") return bodicePath(w, back, front);
+          var flare = preset === "aline" ? 3.5 : 1.5, neckW = w * 0.32, neckD = front ? back * 0.16 : back * 0.05, sh = back * 0.10;
+          return "M0," + totalH + " L" + (-flare * 0.4) + "," + totalH + " L0," + back + " L0," + neckD + " Q0," + (neckD * 0.3) + " " + neckW + "," + (front ? neckD * 0.55 : 2) +
+            " L" + (w - 1.2) + "," + sh + " Q" + w + "," + (back * 0.28) + " " + (w - 0.4) + "," + (back * 0.42) +
+            " L" + w + "," + back + " L" + (w + flare) + "," + totalH + " Z";
+        }
+        add("front", type === "dress" ? "Dress Front" : "Bodice Front", bw + 0.5, totalH, dressPath(bw + 0.5, true), 1, "Cut 1 on fold · waist dart marked in guide");
+        add("back", type === "dress" ? "Dress Back" : "Bodice Back", bw, totalH, dressPath(bw, false), 2, "Cut 2 · centre-back seam / zip");
+        if (type === "dress") notes.push("Dress draft = bodice + skirt in one: waist line at " + fmt2(back, 2) + "″ from the neck, hem flares " + (preset === "aline" ? "strongly (A-line preset)" : "gently") + " below the waist. Draft the skirt part from the hip width (" + fmt2(hip, 1) + "″).");
+        notes.push("Bodice width per quarter: bust ÷ 4 + ease ÷ 4 = " + fmt2(bw, 2) + "″. Waist dart intake ≈ " + fmt2(Math.max(0, (bust + ease - waist - 1) / 4), 2) + "″ per quarter — mark the dart at the waist, legs " + fmt2(back * 0.55, 1) + "″ long.");
+        add("extra", "Neck Facing (front + back)", bw, 3, "M0,3 Q" + (bw / 2) + ",-1.2 " + bw + ",3 L" + bw + ",1.4 Q" + (bw / 2) + ",0.4 0,1.4 Z", 1, "Coordinated set: drafted from the same neckline curve");
+      }
+      if (type === "skirt"){
+        var flare = preset === "aline" ? 4 : (preset === "relaxed" ? 2 : 0.5);
+        add("front", "Skirt Front", sw, len, skirtPath(sw, len, flare), 1, "Cut 1 on fold · waist dart");
+        add("back", "Skirt Back", sw, len, skirtPath(sw, len, flare), 2, "Cut 2 · centre-back zip + vent");
+        add("extra", "Waistband", waist + 3, 3, "M0,0 L" + (waist + 3) + ",0 L" + (waist + 3) + ",3 L0,3 Z", 1, "Waist + 1″ ease + 2″ overlap · fold line at 1.5″");
+        notes.push("Skirt block: hip ÷ 4 + ease = " + fmt2(sw, 2) + "″ per quarter, waist dart ≈ " + fmt2(Math.max(0, (hip + 2 - waist - 1) / 4), 2) + "″. Silhouette from preset: " + preset + " (hem sweep adds ≈ " + fmt2(flare * 4, 1) + "″).");
+      }
+      if (type === "circle"){
+        var frac = preset === "fitted" ? 0.25 : (preset === "classic" ? 0.5 : 1);
+        var r = waist / (2 * Math.PI * frac), R = r + len;
+        var ang = Math.max(40, frac * 160);
+        pieces.push({ name: "Circle Skirt Panel", w: R, h: R, path: "M0," + R + " L0," + (R - len) + " A" + r + "," + r + " 0 0 1 " + (r * Math.sin(ang * Math.PI / 180)) + "," + (R - r * Math.cos(ang * Math.PI / 180)) + " L" + (R * Math.sin(ang * Math.PI / 180)) + "," + (R - R * Math.cos(ang * Math.PI / 180)) + " A" + R + "," + R + " 0 0 1 0," + R + " Z", qty: frac === 1 ? 1 : Math.round(1 / frac), note: (frac === 1 ? "Full" : frac === 0.5 ? "Half" : "Quarter") + " circle · waist radius " + fmt2(r, 2) + "″" });
+        notes.push("Waist radius r = waist ÷ (2π × " + frac + ") = " + fmt2(r, 2) + "″. Outer radius R = r + length = " + fmt2(R, 2) + "″, so the full circle is " + fmt2(R * 2, 1) + "″ across — " + (R * 2 <= 60 ? "fits 60″ fabric folded, or 45″ with seams." : "wider than 60″ fabric: plan panel seams (six-panel start) or a shorter length."));
+        notes.push("Let a circle skirt hang 24 hours before hemming — the bias stretches and the hem drops unevenly.");
+      }
+      if (type === "tshirt"){
+        var kw = bust / 4 + (preset === "oversized" ? 3 : 1);
+        add("front", "T-Shirt Front", kw, len, bodicePath(kw, len, true), 1, "Knit · cut 1 on fold · no darts");
+        add("back", "T-Shirt Back", kw, len, bodicePath(kw, len, false), 1, "Cut 1 on fold");
+        add("sleeve", "Sleeve", bicep + 2, Math.min(9, len), sleevePath(bicep + 2, Math.min(9, len)), 2, "Short sleeve · cut 2");
+        add("extra", "Neckband", Math.max(12, bust / 2.4), 1.75, "M0,0 L" + Math.max(12, bust / 2.4) + ",0 L" + Math.max(12, bust / 2.4) + ",1.75 L0,1.75 Z", 1, "Neck opening × 0.85, stretched to fit · fold in half");
+        notes.push("Knit ease: this draft uses " + (preset === "oversized" ? "oversized" : "low / negative-adjacent") + " ease — check your fabric's stretch %; a woven draft in knit fabric (or the reverse) will not fit the same.");
+      }
+      if (type === "sleeve"){
+        var sl = Math.min(24, Math.max(12, len));
+        add("front", "Sleeve Block", bicep + 2.5, sl, sleevePath(bicep + 2.5, sl), 2, "Cut 2 · cap ease 1–1.5″ over the armhole");
+        notes.push("Sleeve cap height ≈ " + fmt2(Math.min((bicep + 2.5) * 0.55, sl * 0.35), 2) + "″. Coordinated set rule (Nastix): draft the sleeve from the bodice armhole measurement — cap seam length should be armhole + 1–1.5″ ease, no more, or it will pucker.");
+      }
+      if (type === "pants" || type === "shorts"){
+        var shorts = type === "shorts", outseam = shorts ? Math.min(20, len + 6) : Math.max(34, len);
+        add("front", shorts ? "Shorts Front" : "Pants Front", sw, outseam, pantsPath(sw, outseam, shorts), 2, "Cut 2 · zipper fly drafts in Tool 13 too");
+        add("back", shorts ? "Shorts Back" : "Pants Back", sw + 0.5, outseam, pantsPath(sw + 0.5, outseam, shorts), 2, "Cut 2 · back rise +0.75″ over front");
+        add("extra", "Waistband", waist + 3, 3, "M0,0 L" + (waist + 3) + ",0 L" + (waist + 3) + ",3 L0,3 Z", 1, "Straight / contour / elastic presets — see catalogue");
+        notes.push("Pants block: front crotch extension ≈ " + fmt2(sw * 0.22, 2) + "″, back ≈ " + fmt2(sw * 0.38, 2) + "″. Always toile pants — crotch curve fit cannot be judged from numbers alone." + (shorts ? "" : " Outseam used: " + fmt2(outseam, 1) + "″ (set Garment length to your outseam if it differs)."));
+      }
+      if (type === "pocket"){
+        add("front", "Patch Pocket", 5.5, 6.5, "M0,0 L5.5,0 L5.5,5 Q2.75,7 0,5 Z", 2, "Top hem 1″ · topstitch guide 1/4″ from edge · rounded / straight / pointed presets");
+        notes.push("Pocket presets: standard 5.5 × 6.5″ shown. Scale width = garment front quarter width × 0.55 for a balanced look.");
+      }
+      if (type === "waistband"){
+        add("front", "Waistband", waist + 3, 3.5, "M0,0 L" + (waist + 3) + ",0 L" + (waist + 3) + ",3.5 L0,3.5 Z", 1, "Waist " + fmt2(waist, 1) + "″ + 1″ ease + 2″ button overlap · fold line marked at half height");
+        notes.push("Contour preset: curve the top edge down 3/8″ at centre front. Elastic preset: cut at waist − 2″ and add a casing channel instead of the overlap.");
+      }
+      if (type === "collar"){
+        var neck = Math.max(14, bust / 2.2);
+        add("front", "Collar", neck, 3.5, "M0,3.5 Q" + (neck / 2) + ",0.6 " + neck + ",3.5 L" + neck + ",1.8 Q" + (neck / 2) + ",-0.4 0,1.8 Z", 2, "Shirt / stand / flat presets · cut 2 + interfacing");
+        add("extra", "Collar Stand", neck, 1.25, "M0,1.25 Q" + (neck / 2) + ",0 " + neck + ",1.25 L" + neck + ",0.35 Q" + (neck / 2) + ",-0.6 0,0.35 Z", 2, "Matched to the same neckline length: " + fmt2(neck, 1) + "″");
+        notes.push("Coordinated set: collar + stand are drafted from the bodice neckline measurement (" + fmt2(neck, 1) + "″ estimated from bust — measure your bodice neckline and overwrite if it differs).");
+      }
+      if (type === "cuff"){
+        add("front", "Sleeve Cuff", 10.5, 4.5, "M0,0 L10.5,0 L10.5,4.5 L0,4.5 Z", 2, "Wrist + ease + 1″ overlap · fold line at 2.25″ · wide / elastic presets in catalogue");
+        notes.push("Cuff rule: finished cuff width must equal the sleeve hem width — measure your sleeve piece and match it; the 10.5″ shown is the standard start.");
+      }
+      if (type === "tanktop"){
+        var tw = bust / 4 + (preset === "oversized" ? 2.5 : 0.75);
+        add("front", "Tank Top Front", tw, len, bodicePath(tw, len, true), 1, "Cut 1 on fold · deepened armhole, no darts");
+        add("back", "Tank Top Back", tw, len, bodicePath(tw, len, false), 1, "Cut 1 on fold");
+        var bindL = Math.max(14, bust / 1.6);
+        add("extra", "Neck + Armhole Binding", bindL, 1.5, "M0,0 L" + bindL + ",0 L" + bindL + ",1.5 L0,1.5 Z", 1, "One strip to cut up: neck ≈ neckline × 0.9, each armhole ≈ armhole × 0.9");
+        notes.push("Tank top = the T-shirt draft without sleeves: deepen the armhole by ~3/4″ from the block line and bind the neck and armholes with the strip above — cut on the bias for wovens, along the stretch for knits.");
+      }
+      if (type === "hood"){
+        var hneck = Math.max(14, bust / 2.2), hw = hneck / 2 + 2.5, hh = 13;
+        add("front", "Hood Side Panel", hw, hh, "M0," + hh + " L0,3.2 Q0,0.4 " + (hw * 0.45) + ",0.3 Q" + hw + ",0.6 " + hw + ",3.4 L" + hw + "," + hh + " Z", 2, "Cut 2 (mirror pair) · curved edge is the centre seam");
+        add("extra", "Hood Centre Panel (optional)", 3.5, hh, "M0,0 L3.5,0 L3.5," + hh + " L0," + hh + " Z", 1, "Gusset strip between the side panels for a rounder crown");
+        notes.push("Hood: the bottom (neck) edge is " + fmt2(hw, 1) + "″ per panel, drafted from the neckline estimate " + fmt2(hneck, 1) + "″ (from bust, the same estimate the collar uses). Measure the neckline of the top it joins and adjust the panel width to match before cutting.");
+      }
+      if (type === "placket-sleeve"){
+        var pl = 5.5, pw2 = 1.75;
+        add("front", "Sleeve Placket — Tower Piece", pw2, pl, "M0," + pl + " L0,1.3 L" + (pw2 / 2) + ",0 L" + pw2 + ",1.3 L" + pw2 + "," + pl + " Z", 2, "Cut 2 · tower point at top · fold lines 1/2″ from each long edge");
+        add("extra", "Placket Underlap", 1, pl, "M0,0 L1,0 L1," + pl + " L0," + pl + " Z", 2, "Cut 2 · sits under the tower piece");
+        notes.push("Standard shirt sleeve placket: " + pl + "″ opening, tower point finishing 1″ above the opening top. Lengthen both pieces for a deeper opening. Pairs with the Sleeve Cuff draft — the placket sits at the sleeve's back opening and the cuff closes over it.");
+      }
+      if (type === "placket-front"){
+        var fl = Math.max(12, len), fw = 3.5, btns = Math.max(3, Math.round(fl / 3));
+        add("front", "Front Placket — Button Side", fw, fl, "M0,0 L" + fw + ",0 L" + fw + "," + fl + " L0," + fl + " Z", 1, "Cut 1 · folds to a finished 1.25″ placket · button marks every ~3″");
+        add("extra", "Front Placket — Buttonhole Side", fw, fl, "M0,0 L" + fw + ",0 L" + fw + "," + fl + " L0," + fl + " Z", 1, "Cut 1 · interface this side · buttonholes vertical, centred on the fold");
+        notes.push("Placket length = Garment length (" + fmt2(fl, 1) + "″) — set it to your shirt's front length. Button spacing: " + btns + " buttons at ≈ " + fmt2(fl / btns, 1) + "″ apart, first button 3/4″ below the neckline seam, last one level with the hem fold.");
+      }
+      if (type === "facing-armhole"){
+        var aw = bw + 0.5;
+        add("front", "Armhole Facing", aw, 3, "M0,3 Q" + (aw * 0.5) + ",-0.8 " + aw + ",3 L" + aw + ",1.5 Q" + (aw * 0.5) + ",0.5 0,1.5 Z", 2, "Cut 2 (front + back armholes) · 1.5″ finished width");
+        notes.push("Drafted from the bodice quarter width (" + fmt2(aw, 1) + "″). Armhole curves vary by design — lay this over your bodice armhole and true the curve before cutting; the top edge must match the armhole seam exactly.");
+      }
+      if (type === "vent"){
+        var vl = Math.min(9, Math.max(6, len * 0.35));
+        add("front", "Skirt Vent Underlay", 1.75, vl, "M0,0 L1.75,0 L1.75," + vl + " L0," + vl + " Z", 1, "Adds to the centre-back seam of one skirt back piece");
+        add("extra", "Vent Facing Strip", 2.5, vl, "M0,0 L2.5,0 L2.5," + vl + " L0," + vl + " Z", 1, "Faces the vent opening on the other back piece");
+        notes.push("Vent length " + fmt2(vl, 1) + "″ (≈ a third of the skirt — set Garment length to your skirt length). Same pieces work as a side slit or kick pleat: sew the seam down to the vent-top mark only, and topstitch the facing at 45° across the top of the opening.");
+      }
+      if (type === "beltloop"){
+        var loops = Math.max(4, Math.round(waist / 6));
+        add("front", "Belt Loop Strip", 1, 3.5, "M0,0 L1,0 L1,3.5 L0,3.5 Z", loops, "Cut " + loops + " · finished loop fits a 1.5″ waistband · fold long edges to centre, topstitch");
+        notes.push(loops + " loops for a " + fmt2(waist, 0) + "″ waist — space them ≈ " + fmt2(waist / loops, 1) + "″ apart: a pair either side of the fly, one at each side seam, one at centre back. Loop length = waistband width × 2 + 1″ turning ease.");
+      }
+      if (type === "pocket-inseam"){
+        add("front", "In-Seam Pocket Bag", 6.5, 8.5, "M0,0 L6.5,0 L6.5,5.8 Q6.5,8.5 3.8,8.5 L1.2,8.5 Q0,8.5 0,5.8 Z", 2, "Cut 2 pairs · straight top edge sits in the side seam");
+        notes.push("Opening ≈ 6″ along the side seam: mark the opening notches on your skirt or pants side seam from 1″ below the waist to hip level, and sew the seam closed above and below them only. Bag is adult-hand size — scale × 0.8 for children.");
+      }
+      if (type === "pocket-welt"){
+        add("front", "Welt Pocket Bag", 6, 7, "M0,0 L6,0 L6,7 L0,7 Z", 2, "Cut 2 (bag + bag facing) · for a 5″ opening");
+        add("extra", "Welt Strip", 5.5, 1.5, "M0,0 L5.5,0 L5.5,1.5 L0,1.5 Z", 1, "Single welt: this strip folded · double welt: cut 2 strips, finish each at 3/8″");
+        notes.push("5″ is the jacket-standard opening (4.5″ trousers, 5.5″ coat) — mark the placement line on the garment piece first; welt and bag are cut to the opening, not the other way round.");
+      }
+      if (type === "pocket-slant"){
+        add("front", "Slant Pocket Bag", 7, 8.5, "M0,2.2 L7,0 L7,8.5 L0,8.5 Z", 2, "Cut 2 · slanted edge is the pocket opening");
+        add("extra", "Pocket Facing / Waist Stay", 7, 2, "M0,0 L7,0 L7,2 L0,2 Z", 2, "Cut in garment fabric — it's the part that shows at the opening");
+        notes.push("The slant runs from 2.2″ down the side seam to the front — mark the matching cut-away line on your pants front and keep the bag's slant edge identical to it, or the opening will gape. The stay strip anchors the bag to the waistband so the pocket doesn't pull the front out of shape.");
+      }
+      if (type === "fly"){
+        var fh = 8.5;
+        add("front", "Fly Facing", 2, fh, "M0,0 L2,0 L2," + fh + " Q1," + (fh + 0.6) + " 0," + fh + " Z", 1, "Cut 1 · curves under the zip at the base of the fly");
+        add("extra", "Fly Shield", 2.5, fh, "M0,0 L2.5,0 L2.5," + fh + " L0," + fh + " Z", 1, "Cut 1 · fold in half lengthwise · sits behind the zip");
+        notes.push("Fly length " + fh + "″ suits a standard 7–8″ trouser zip. Match the facing's top edge to your pants front waist and its curve to the front crotch curve of the Pants draft before cutting.");
+      }
+      if (type === "flap"){
+        add("front", "Pocket Flap", 5.5, 2.6, "M0,0 L5.5,0 L5.5,1.7 Q2.75,2.9 0,1.7 Z", 2, "Cut 2 pairs + interfacing · rounded preset — square the corners for straight, centre-point for pointed");
+        notes.push("Flap width = pocket opening + 1/2″. The 5.5″ shown pairs with the Welt Pocket and Patch Pocket drafts above.");
+      }
+      if (!pieces.length) notes.push("All parts are switched off above — tap at least one part back on.");
+      return { pieces: pieces, notes: notes, bust: bust, waist: waist, hip: hip };
+    }
+    function buildSVG(d, forExport){
+      var sa = parseFloat($$("gen-sa").value) || 0, units = $$("gen-units").value, paperless = $$("gen-paperless").value === "on";
+      var scale = 16, gap = 1.2, x = gap, maxH = 0, i, p;
+      d.pieces.forEach(function(pc){ maxH = Math.max(maxH, pc.h); });
+      var totalW = gap + d.pieces.reduce(function(s, pc){ return s + pc.w + gap; }, 0);
+      var totalH = maxH + 3.2, conv = units === "cm" ? 2.54 : 1, ul = units === "cm" ? " cm" : "″";
+      var s = '<svg xmlns="http://www.w3.org/2000/svg" ' + (forExport ? 'width="' + fmt2(totalW, 2) + 'in" height="' + fmt2(totalH, 2) + 'in" ' : '') + 'viewBox="0 0 ' + fmt2(totalW * scale, 0) + ' ' + fmt2(totalH * scale, 0) + '">';
+      s += '<rect width="100%" height="100%" fill="#ffffff"/>';
+      /* test square: exactly 1 inch */
+      s += '<rect x="' + (0.3 * scale) + '" y="' + (0.3 * scale) + '" width="' + scale + '" height="' + scale + '" fill="none" stroke="#bc4b1f" stroke-width="1.5"/><text x="' + (0.3 * scale) + '" y="' + (1.7 * scale) + '" font-size="9" fill="#bc4b1f" font-family="monospace">TEST 1 in / 2.54 cm</text>';
+      x = gap + 1.8;
+      d.pieces.forEach(function(pc){
+        var px = x * scale, py = 2.2 * scale;
+        if (sa > 0) s += '<rect x="' + (px - sa * scale) + '" y="' + (py - sa * scale) + '" width="' + ((pc.w + sa * 2) * scale) + '" height="' + ((pc.h + sa * 2) * scale) + '" fill="none" stroke="#a87b14" stroke-width="1" stroke-dasharray="5 4"/>';
+        s += '<g transform="translate(' + px + ',' + py + ') scale(' + scale + ')"><path d="' + pc.path + '" fill="#dcebe2" fill-opacity="0.55" stroke="#175243" stroke-width="' + (1.6 / scale) + '"/>';
+        s += '<line x1="' + (pc.w / 2) + '" y1="0.4" x2="' + (pc.w / 2) + '" y2="' + (pc.h - 0.4) + '" stroke="#bc4b1f" stroke-width="' + (1 / scale) + '"/><path d="M' + (pc.w / 2 - 0.18) + ',0.7 L' + (pc.w / 2) + ',0.3 L' + (pc.w / 2 + 0.18) + ',0.7" fill="none" stroke="#bc4b1f" stroke-width="' + (1 / scale) + '"/></g>';
+        s += '<text x="' + px + '" y="' + (py - 8) + '" font-size="12" font-weight="bold" fill="#1d2420" font-family="sans-serif">' + pc.name + ' ×' + pc.qty + '</text>';
+        if (paperless) s += '<text x="' + px + '" y="' + (py + (pc.h + 0.55) * scale) + '" font-size="10.5" fill="#4c554f" font-family="monospace">' + fmt2(pc.w * conv, 1) + ul + ' × ' + fmt2(pc.h * conv, 1) + ul + '</text>';
+        x += pc.w + gap;
+      });
+      if (sa > 0) s += '<text x="' + (0.3 * scale) + '" y="' + ((totalH - 0.35) * scale) + '" font-size="10" fill="#a87b14" font-family="sans-serif">Dashed line = seam allowance ' + fmt2(sa, 3) + '″ bounding guide — add the allowance around each piece outline when cutting.</text>';
+      s += "</svg>";
+      return { svg: s, totalW: totalW, totalH: totalH };
+    }
+    function buildDXF(d){
+      var out = "0\nSECTION\n2\nENTITIES\n", x = 0;
+      d.pieces.forEach(function(pc){
+        out += "0\nLWPOLYLINE\n8\nPATTERN\n90\n4\n70\n1\n10\n" + x + "\n20\n0\n10\n" + (x + pc.w) + "\n20\n0\n10\n" + (x + pc.w) + "\n20\n" + pc.h + "\n10\n" + x + "\n20\n" + pc.h + "\n";
+        out += "0\nTEXT\n8\nLABELS\n10\n" + x + "\n20\n" + (pc.h + 1) + "\n40\n0.4\n1\n" + pc.name.replace(/[^A-Za-z0-9 ]/g, "") + "\n";
+        x += pc.w + 2;
+      });
+      return out + "0\nENDSEC\n0\nEOF\n";
+    }
+    function runGenerator(){
+      var out = $$("gen-result"), d = draftPieces(), built = buildSVG(d, true);
+      lastSVG = built.svg; lastDXF = buildDXF(d);
+      out.className = "result show";
+      if (!d.pieces.length){ out.innerHTML = verdict2("bad", "No parts included", d.notes.join(" ")); return; }
+      var paper = $$("gen-paper").value, pw = paper === "Letter" ? 7.5 : 7.27, ph = paper === "Letter" ? 10 : 10.69;
+      var pages = Math.ceil(built.totalW / pw) * Math.ceil(built.totalH / ph);
+      var maxPieceW = Math.max.apply(null, d.pieces.map(function(p){ return p.w; }));
+      var html = "<h3>Your draft</h3><div class='preview-stage'>" + buildSVG(d, false).svg + "</div>";
+      html += "<p style='margin-top:10px'><b>" + d.pieces.length + " piece group" + (d.pieces.length === 1 ? "" : "s") + "</b> · full draft ≈ <b>" + fmt2(built.totalW, 1) + " × " + fmt2(built.totalH, 1) + "″</b></p>";
+      d.pieces.forEach(function(pc){ html += "<p class='note' style='margin:2px 0'><b>" + pc.name + "</b> — " + fmt2(pc.w, 2) + " × " + fmt2(pc.h, 2) + "″ · cut " + pc.qty + (pc.note ? " · " + pc.note : "") + "</p>"; });
+      d.notes.forEach(function(n){ html += verdict2("ok", "Drafting note", n); });
+      if (paper === "A0") html += verdict2(built.totalW <= 33.1 && built.totalH <= 46.8 ? "ok" : "warn", "A0 export check", built.totalW <= 33.1 && built.totalH <= 46.8 ? "Draft fits one A0 sheet (33.1 × 46.8″) — send the SVG / full-size print route via Tool 11's counter script." : "Draft is larger than one A0 sheet — split by piece group or use two sheets.");
+      else if (paper === "proj36") html += verdict2(maxPieceW <= 36 ? "ok" : "warn", "Projector check — 36″ width (Sewist)", maxPieceW <= 36 ? "Widest piece is " + fmt2(maxPieceW, 1) + "″ — fits the 36″ projector file width. Calibrate with Tool 9 before cutting." : "A piece is wider than 36″ — rotate it or split it for projector cutting.");
+      else html += verdict2("ok", "Tiled " + paper + " printing", "≈ <b>" + pages + " pages</b> to tile this draft at 100% (printable area " + pw + " × " + ph + "″ per page, before overlap). Print the SVG from a browser at 100%, check the test square with Tool 3, and tape with Tool 8.");
+      html += verdict2("warn", "Sew a toile first", "This is a basic-block draft from simplified formulas — the same starting point all three sites give. Fit it in cheap fabric, adjust, then cut your real fabric. The SVG downloads at true scale (1 unit = 1 inch); verify the test square after any print or import.");
+      out.innerHTML = html;
+    }
+    $$("gen-run").addEventListener("click", runGenerator);
+    $$("gen-svg").addEventListener("click", function(){ if (!lastSVG) runGenerator(); download("zorqi-pattern-draft.svg", lastSVG, "image/svg+xml"); });
+    $$("gen-dxf").addEventListener("click", function(){ if (!lastDXF) runGenerator(); download("zorqi-pattern-outline.dxf", lastDXF, "application/dxf"); });
+
+    /* ---- catalogue ---- */
+    var CATALOGUE = [
+      ["Basic Dress Block","Core block","Nastix","Bodice + skirt in one draft, fitted / classic / A-line presets","Drafts in Tool 13"],
+      ["Wrap Dress","Complete garment","Nastix","Crossover fronts, waist ties, back on fold, bindings from generated edges","Project in Tool 16"],
+      ["T-Shirt","Knit top","Nastix","Front, back, sleeve + neckband; regular / relaxed / cropped / oversized","Drafts in Tool 13"],
+      ["Tank Top","Knit top","Nastix","Neck + armhole bindings, fit presets","Drafts in Tool 13"],
+      ["Raglan Top","Complete upper body","Nastix","Shoulder-shaped raglan sleeve, seam checks","Mix-and-Match Tool 14"],
+      ["Relaxed Shirt","Complete garment","Nastix","Body, long sleeve, plackets, collar stand, collar, cuffs","Project in Tool 16"],
+      ["Raglan Hoodie","Complete garment","Nastix","Raglan sleeves, fitted hood, cuffs, waistband, kangaroo pocket","Project in Tool 16"],
+      ["Hood","Upper body detail","Nastix","Two-piece hood matched to a finished neckline, notches","Drafts in Tool 13"],
+      ["Basic Skirt","Foundation","Nastix","Straight, pencil, A-line, tapered, flared presets","Drafts in Tool 13"],
+      ["Circle Skirt","Circular skirt","Nastix","Quarter / half / full / six-panel, calculated radii, fabric-width feedback","Drafts in Tool 13"],
+      ["Basic Bodice","Upper body","Nastix","Fitted, relaxed, sleeveless, V-neck starts","Drafts in Tool 13"],
+      ["Basic Sleeve","Sleeve block","Nastix","Long, short, relaxed, cap starts for bodice projects","Drafts in Tool 13"],
+      ["Basic Pants","Lower body","Nastix","Front, back, waistband; regular / relaxed / wide-leg","Drafts in Tool 13"],
+      ["Basic Shorts","Lower body","Nastix","Front, back, waistband, inseam / thigh / hem presets","Drafts in Tool 13"],
+      ["Sleeve Cuff","Detail","Nastix","Fold line, overlap, SA; standard / wide / elastic","Drafts in Tool 13"],
+      ["Sleeve Placket","Closure detail","Nastix","Tower + underlap, editable folds and point","Drafts in Tool 13"],
+      ["Front Placket","Closure detail","Nastix","Button + buttonhole plackets, calculated spacing","Drafts in Tool 13"],
+      ["Collar","Detail","Nastix","Shirt, stand and flat collar presets","Drafts in Tool 13"],
+      ["Neck Facing","Finish","Nastix","Front + back facings matched to neckline curves","Drafts in Tool 13 (extra part)"],
+      ["Armhole Facing","Finish","Nastix","Facings matched to armhole curves","Drafts in Tool 13"],
+      ["Waistband","Finish","Nastix","Straight, contour, elastic, button-overlap presets","Drafts in Tool 13"],
+      ["Skirt Vent","Detail","Nastix","Vent, side slit or kick pleat for straight / pencil / tapered skirts","Drafts in Tool 13"],
+      ["Belt Loop","Detail","Nastix","Matched to waistband width, fold + stitch guides","Drafts in Tool 13"],
+      ["Patch Pocket","Detail","Nastix","Shape presets, top hem, SA, topstitch guide","Drafts in Tool 13"],
+      ["In-Seam Pocket","Detail","Nastix","Pocket bag with opening notches, grainline, rounded / straight","Drafts in Tool 13"],
+      ["Welt Pocket","Pocket detail","Nastix","Single / double welt, placement guide, pocket bag","Drafts in Tool 13"],
+      ["Slant Pocket","Pocket detail","Nastix","Cut-away front, waist stay, facing, matched bags","Drafts in Tool 13"],
+      ["Zipper Fly","Trouser detail","Nastix","Placement guide, fly facing, folded fly shield","Drafts in Tool 13"],
+      ["Pocket Flap","Detail","Nastix","Rounded, straight or pointed flap, closure marks","Drafts in Tool 13"],
+      ["Aaron A-Shirt","Design","FreeSewing","Classic A-shirt / tank, made to measure","Catalogued design"],
+      ["Albert Apron","Design","FreeSewing","Bib apron drafted to your measurements","Catalogued design"],
+      ["Ashley A-Line Shorts","Design","FreeSewing","A-line shorts","Catalogued design"],
+      ["Bee Bikini Top","Design","FreeSewing","Bikini top","Catalogued design"],
+      ["Bella Body Block","Block","FreeSewing","Women's body block — the base of many designs","Drafts in Tool 13 (bodice)"],
+      ["Benjamin Bow Tie","Design","FreeSewing","Bow tie","Catalogued design"],
+      ["Bent Body Block","Block","FreeSewing","Body block with a two-part sleeve","Drafts in Tool 13 (bodice)"],
+      ["Bibi Body Block","Block","FreeSewing","Body block","Drafts in Tool 13 (bodice)"],
+      ["Bob the Bib","Design","FreeSewing","Baby bib","Catalogued design"],
+      ["Breanna Body Block","Block","FreeSewing","Women's body block","Drafts in Tool 13 (bodice)"],
+      ["Brian Body Block","Block","FreeSewing","Men's body block","Drafts in Tool 13 (bodice)"],
+      ["Bruce Boxer Briefs","Design","FreeSewing","Knit boxer briefs","Catalogued design"],
+      ["Carlita Coat","Design","FreeSewing","Tailored coat, women's cut","Catalogued design"],
+      ["Carlton Coat","Design","FreeSewing","Tailored coat, men's cut","Catalogued design"],
+      ["Cathrin Corset","Design","FreeSewing","Underbust corset","Catalogued design"],
+      ["Charlie Chinos","Design","FreeSewing","Chino trousers","From pants draft"],
+      ["Cornelius Cycling Breeches","Design","FreeSewing","Cycling breeches","From pants draft"],
+      ["Crux Climbing Pants","Design","FreeSewing","Climbing pants","From pants draft"],
+      ["Devon Denim Jacket","Design","FreeSewing","Denim jacket","Catalogued design"],
+      ["Diana Draped Top","Design","FreeSewing","Draped top","From bodice draft"],
+      ["Florence Face Mask","Design","FreeSewing","Face mask","Catalogued design"],
+      ["Florent Flat Cap","Design","FreeSewing","Flat cap","Catalogued design"],
+      ["Gozer Ghost Costume","Design","FreeSewing","Ghost costume","Catalogued design"],
+      ["Hannah Hoodie","Design","FreeSewing","Hoodie","Project in Tool 16"],
+      ["Hi the Shark","Plush","FreeSewing","Shark plush toy","Catalogued design"],
+      ["Holmes Deerstalker Hat","Design","FreeSewing","Deerstalker hat","Catalogued design"],
+      ["Hortensia Handbag","Design","FreeSewing","Handbag","Catalogued design"],
+      ["Huey Hoodie","Design","FreeSewing","Hoodie","Project in Tool 16"],
+      ["Hugo Hoodie","Design","FreeSewing","Hoodie with hood, pocket, bands","Project in Tool 16"],
+      ["Jaeger Jacket","Design","FreeSewing","Tailored jacket","Catalogued design"],
+      ["Jane 1790s Shift","Design","FreeSewing","Historical 1790s shift","Catalogued design"],
+      ["Jett Jacket","Design","FreeSewing","Jacket","Catalogued design"],
+      ["Design Part Library","Library","FreeSewing","Reusable design-parts library — not a garment pattern","Catalogued library"],
+      ["Lily Leggings","Design","FreeSewing","Leggings","Catalogued design"],
+      ["Lucy Tie-On Pocket","Design","FreeSewing","Tie-on pocket","Catalogued design"],
+      ["Lumina Leggings","Design","FreeSewing","Leggings","Catalogued design"],
+      ["Lumira Leggings","Design","FreeSewing","Leggings","Catalogued design"],
+      ["Lunetius Lacerna","Design","FreeSewing","Roman lacerna cloak","Catalogued design"],
+      ["Noble Body Block","Block","FreeSewing","Body block","Drafts in Tool 13 (bodice)"],
+      ["Octoplushy","Plush","FreeSewing","Octopus plush toy","Catalogued design"],
+      ["Onyx One-Piece","Design","FreeSewing","One-piece swimsuit","Catalogued design"],
+      ["Opal Overalls","Design","FreeSewing","Overalls / dungarees","Catalogued design"],
+      ["Otis Romper","Design","FreeSewing","Baby romper","Catalogued design"],
+      ["Paco Pants","Design","FreeSewing","Casual summer pants","From pants draft"],
+      ["Penelope Pencil Skirt","Design","FreeSewing","Pencil skirt","From skirt draft"],
+      ["Percy Puffy Pants","Design","FreeSewing","Puffy pants","Catalogued design"],
+      ["Polly Plush","Plush","FreeSewing","Plush toy","Catalogued design"],
+      ["Sabrina Sports Top","Design","FreeSewing","Sports top","Catalogued design"],
+      ["Sandy Circle Skirt","Design","FreeSewing","Circle skirt","Drafts in Tool 13 (circle skirt)"],
+      ["Sarah Skirt Block","Block","FreeSewing","Skirt block","Drafts in Tool 13 (skirt)"],
+      ["Sasha Skater Dress","Design","FreeSewing","Skater dress","From dress draft"],
+      ["Shale Shorts","Design","FreeSewing","Shorts","From shorts draft"],
+      ["Shelly Swim Shirt","Design","FreeSewing","Swim shirt / rash guard","Catalogued design"],
+      ["Shin Swim Trunks","Design","FreeSewing","Swim trunks","Catalogued design"],
+      ["Simon Button-Down Shirt","Design","FreeSewing","Button-down shirt, men's cut","Project in Tool 16"],
+      ["Simone Button-Down Shirt","Design","FreeSewing","Button-down shirt, women's cut","Project in Tool 16"],
+      ["Skully","Plush","FreeSewing","The FreeSewing mascot, as a plush","Catalogued design"],
+      ["Sophie Slip Dress","Design","FreeSewing","Slip dress","From dress draft"],
+      ["Sunny Split-Side Skirt","Design","FreeSewing","Split-side skirt","From skirt draft"],
+      ["Sven Sweatshirt","Design","FreeSewing","Classic sweatshirt","Catalogued design"],
+      ["Tamiko Zero-Waste Top","Design","FreeSewing","Zero-waste top","Catalogued design"],
+      ["Teagan T-Shirt","Design","FreeSewing","Fitted T-shirt","Drafts in Tool 13"],
+      ["Tiberius Tunica","Design","FreeSewing","Roman tunica","Catalogued design"],
+      ["Tina Top","Design","FreeSewing","Top","Catalogued design"],
+      ["Titan Trouser Block","Block","FreeSewing","Trouser block other designs build on","Drafts in Tool 13 (pants)"],
+      ["Toni Top","Design","FreeSewing","Top","Catalogued design"],
+      ["Trayvon Tie","Design","FreeSewing","Necktie","Catalogued design"],
+      ["Tristan Top","Design","FreeSewing","Top","Catalogued design"],
+      ["Uma Undies","Design","FreeSewing","Underwear","Catalogued design"],
+      ["Umbra Undies","Design","FreeSewing","Underwear","Catalogued design"],
+      ["Wahid Waistcoat","Design","FreeSewing","Classic waistcoat / vest","Catalogued design"],
+      ["Walburga Wappenrock","Design","FreeSewing","Medieval wappenrock / surcoat","Catalogued design"],
+      ["Waralee Wrap Pants","Design","FreeSewing","Wrap-around pants","Catalogued design"],
+      ["Yuri Sweater","Design","FreeSewing","Sweater","Catalogued design"],
+      ["Mix-and-Match Dress Blocks","Designer","Sewist","Bodice × neckline × sleeve × skirt combinations","Tool 14"],
+      ["Women's / Men's / Girls' Patterns","Designer","Sewist","Made-to-measure ranges incl. men's section","Tool 14 + 15"],
+      ["Doll Patterns","Designer","Sewist","Patterns drafted at doll scale (see Sewling size info)","Tool 15 doll set"],
+      ["Sewist CAD Drafting","CAD","Sewist","Parametric 2D/3D drafting, automatic grading, cloud library","Tools 13–15 (browser version)"],
+      ["Tech Flats + Specs","Tech pack","Sewist","Vector flat + specification with every pattern","Tool 16 spec sheet"]
+    ];
+    function renderCatalogue(q){
+      var list = CATALOGUE.filter(function(c){ return !q || (c[0] + " " + c[1] + " " + c[2] + " " + c[3]).toLowerCase().indexOf(q.toLowerCase()) !== -1; });
+      $$("cat-grid").innerHTML = list.length ? list.map(function(c){
+        return '<div class="cat-card"><span class="src">' + c[2] + ' · ' + c[1] + '</span><b>' + c[0] + '</b><span>' + c[3] + '</span><span><b style="display:inline;font-size:12.5px">' + c[4] + '</b></span></div>';
+      }).join("") : '<p class="note">No match — try "pocket", "hood" or "block".</p>';
+    }
+    renderCatalogue("");
+    $$("cat-q").addEventListener("input", function(){ renderCatalogue(this.value); });
+
+    /* ================= 14 MIX AND MATCH ================= */
+    var MM_STEPS = {
+      en: ["Staystitch the neckline and armholes so they don't stretch out.","Sew the darts (if fitted) and press them down or toward centre.","Join shoulder seams; finish the neckline for your chosen style.","Set in or sew the sleeves, matching notches; add cuffs if long.","Sew side seams from hem to sleeve hem in one pass where possible.","Attach the skirt / bottom at the waist; check the waist seams line up.","Fit the closure, then hem, press, and try on before final stitching."],
+      es: ["Sobrehíla el escote y las sisas para que no se deformen.","Cose las pinzas (si es entallado) y plánchalas hacia abajo o hacia el centro.","Une los hombros; termina el escote según el estilo elegido.","Monta las mangas casando los piquetes; añade puños si son largas.","Cose los costados del bajo a la manga en una sola pasada si es posible.","Une la falda / parte inferior por la cintura; comprueba que las costuras coincidan.","Coloca el cierre, haz el dobladillo, plancha y pruébatelo antes de la costura final."],
+      fr: ["Surfilez l'encolure et les emmanchures pour éviter qu'elles ne se détendent.","Cousez les pinces (si ajusté) et repassez-les vers le bas ou le centre.","Assemblez les épaules ; finissez l'encolure selon le style choisi.","Montez les manches en alignant les repères ; ajoutez les poignets si elles sont longues.","Cousez les côtés de l'ourlet à la manche en une fois si possible.","Fixez la jupe / le bas à la taille ; vérifiez l'alignement des coutures.","Posez la fermeture, ourlez, repassez et essayez avant la couture définitive."],
+      de: ["Versäubern Sie Halsausschnitt und Armloch, damit sie sich nicht ausdehnen.","Nähen Sie die Abnäher (bei taillierter Form) und bügeln Sie sie nach unten oder zur Mitte.","Schulternähte schließen; den Ausschnitt passend zum Stil verarbeiten.","Ärmel einsetzen und Passzeichen treffen; bei langen Ärmeln Manschetten annähen.","Seitennähte möglichst in einem Zug vom Saum bis zum Ärmelsaum nähen.","Rock / Unterteil an der Taille ansetzen; Nahtübergänge prüfen.","Verschluss einsetzen, säumen, bügeln und vor dem endgültigen Nähen anprobieren."],
+      nl: ["Stik de hals en armsgaten door zodat ze niet uitrekken.","Naai de coupenaden (bij getailleerd) en strijk ze omlaag of naar het midden.","Sluit de schoudernaden; werk de hals af in de gekozen stijl.","Zet de mouwen in op de merktekens; voeg manchetten toe bij lange mouwen.","Naai de zijnaden waar mogelijk in één keer van zoom tot mouwzoom.","Bevestig de rok / het onderstuk aan de taille; controleer de naadaansluiting.","Plaats de sluiting, zoom om, strijk en pas vóór het definitieve stikken."]
+    };
+    function mmSilhouette(neck, sleeve, skirt){
+      var neckPath = { round: "M85,42 Q100,56 115,42", v: "M85,42 L100,66 L115,42", scoop: "M85,42 Q100,72 115,42", boat: "M82,44 Q100,50 118,44", collar: "M85,42 L100,52 L115,42 M85,42 L92,58 M115,42 L108,58" }[neck];
+      var slv = "";
+      if (sleeve === "cap") slv = '<path d="M72,50 q-10,14 -4,24 l12,-4 q-2,-12 -8,-20Z" fill="#dcebe2" stroke="#175243"/><path d="M128,50 q10,14 4,24 l-12,-4 q2,-12 8,-20Z" fill="#dcebe2" stroke="#175243"/>';
+      if (sleeve === "short" || sleeve === "puff") slv = '<path d="M70,48 q-16,10 -12,30 l16,-2 q-2,-16 -4,-28Z" fill="#dcebe2" stroke="#175243"/><path d="M130,48 q16,10 12,30 l-16,-2 q2,-16 4,-28Z" fill="#dcebe2" stroke="#175243"/>';
+      if (sleeve === "elbow" || sleeve === "long" || sleeve === "raglan") slv = '<path d="M70,48 L58,' + (sleeve === "long" ? 150 : 118) + ' l14,3 L80,60Z" fill="#dcebe2" stroke="#175243"/><path d="M130,48 L142,' + (sleeve === "long" ? 150 : 118) + ' l-14,3 L120,60Z" fill="#dcebe2" stroke="#175243"/>';
+      var skirtPath = { pencil: "M78,118 L122,118 L118,196 L82,196Z", aline: "M78,118 L122,118 L136,196 L64,196Z", circle: "M78,118 L122,118 L148,196 Q100,206 52,196Z", straight: "M78,118 L122,118 L122,196 L78,196Z", pants: "M78,118 L122,118 L120,200 L104,200 L100,140 L96,200 L80,200Z", shorts: "M78,118 L122,118 L124,162 L103,162 L100,138 L97,162 L76,162Z" }[skirt];
+      return '<svg viewBox="0 0 200 215" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Garment silhouette preview"><path d="M85,40 L72,50 L80,118 L120,118 L128,50 L115,40 Q100,48 85,40Z" fill="#dcebe2" stroke="#175243" stroke-width="1.6"/><path d="' + neckPath + '" fill="none" stroke="#bc4b1f" stroke-width="1.8"/>' + slv + '<path d="' + skirtPath + '" fill="#f3ead0" stroke="#175243" stroke-width="1.6"/></svg>';
+    }
+    var lastMM = null;
+    $$("mm-run").addEventListener("click", function(){
+      var g = $$("mm-garment").value, fit = $$("mm-fit").value, neck = $$("mm-neck").value, sleeve = $$("mm-sleeve").value,
+          skirt = $$("mm-skirt").value, closure = $$("mm-closure").value, who = $$("mm-who").value, lang = $$("mm-lang").value;
+      var yards = 1.6;
+      if (g === "dress") yards += 1.1; if (g === "jumpsuit") yards += 1.6; if (g === "topskirt") yards += 1.2;
+      if (skirt === "circle") yards += 1.2; if (skirt === "pants") yards += 0.5;
+      if (sleeve === "long") yards += 0.6; if (sleeve === "puff") yards += 0.4; if (sleeve === "raglan") yards += 0.5;
+      if (who === "doll") yards = yards * 0.18; if (who === "children") yards = yards * 0.55;
+      var names = { dress: "Dress", topskirt: "Top + skirt outfit", top: "Top / blouse", jumpsuit: "Jumpsuit" };
+      var combo = names[g] + " · " + fit + " bodice · " + neck + " neckline · " + sleeve + " sleeve · " + skirt + " bottom · " + closure;
+      lastMM = { combo: combo, yards: yards };
+      var steps = MM_STEPS[lang] || MM_STEPS.en;
+      var html = "<h3>" + combo + "</h3><div class='preview-stage' style='max-width:300px'>" + mmSilhouette(neck, sleeve, skirt) + "</div>";
+      html += verdict2("ok", "Estimated fabric: " + fmt2(yards, 2) + " yards (60″ fabric)", "Sewist-style online yardage estimate for this combination" + (who === "doll" ? " at doll scale" : "") + ". For your exact pieces, run them through Tool 7's layout planner before buying.");
+      html += "<p><b>Sew order</b> (" + $$("mm-lang").selectedOptions[0].text + "):</p><ol class='steps'>" + steps.map(function(s){ return "<li>" + s + "</li>"; }).join("") + "</ol>";
+      html += verdict2("ok", "Draft it", "Draft the matching blocks in Tool 13 (bodice / dress, sleeve, skirt or pants, collar / placket details), using the measurement set from Tool 15. Parts are pre-matched the Sewist way: sleeve cap to the bodice armhole, facing to the neckline, waistband to the waist.");
+      html += '<p class="note">Combinations on this page: 4 garments × 3 fits × 5 necklines × 7 sleeves × 6 bottoms × 4 closures = 10,080 — Sewist\'s own CAD library advertises trillions because it also varies lengths, pockets, collars and sizes per part.</p>';
+      var out = $$("mm-result"); out.className = "result show"; out.innerHTML = html;
+    });
+
+    /* ================= 15 MEASUREMENT SETS ================= */
+    var MS_FIELDS = [
+      ["neck", "Neck"], ["bust", "Chest / bust"], ["waist", "Waist"], ["hip", "Hips"],
+      ["shoulder", "Shoulder width"], ["back", "Back-waist length"], ["arm", "Arm length"],
+      ["bicep", "Bicep"], ["wrist", "Wrist"], ["inseam", "Inseam"], ["outseam", "Outseam"], ["height", "Height"]
+    ];
+    var MS_BASE = {
+      women:    { neck: 14, bust: 38, waist: 30, hip: 40, shoulder: 15.5, back: 16.5, arm: 24, bicep: 12, wrist: 6.5, inseam: 31, outseam: 41, height: 66 },
+      men:      { neck: 15.5, bust: 40, waist: 34, hip: 40, shoulder: 17.5, back: 17.5, arm: 25.5, bicep: 13.5, wrist: 7.25, inseam: 32, outseam: 42, height: 69 },
+      children: { neck: 11, bust: 27, waist: 23.5, hip: 28, shoulder: 11.5, back: 12, arm: 18, bicep: 8.5, wrist: 5.25, inseam: 22, outseam: 30, height: 50 },
+      doll:     { neck: 4.2, bust: 11.4, waist: 9, hip: 12, shoulder: 4.7, back: 5, arm: 7.2, bicep: 3.6, wrist: 2, inseam: 9.3, outseam: 12.3, height: 19.8 }
+    };
+    var MS_STEP = { women: 2, men: 2, children: 1, doll: 0.6 };
+    var MS_ORDER = ["4XS","3XS","2XS","XS","S","M","L","XL","2XL","3XL","4XL","5XL","6XL","7XL","8XL","9XL"];
+    (function(){
+      $$("ms-fields").innerHTML = '<div class="grid2">' + MS_FIELDS.map(function(f){
+        return '<label class="f">' + f[1] + ' (inches)<input type="number" step="0.25" id="ms-' + f[0] + '" /></label>';
+      }).join("") + "</div>";
+      loadStd();
+    })();
+    function loadStd(){
+      var who = $$("ms-who").value, std = $$("ms-std").value || "M";
+      var idx = MS_ORDER.indexOf(std) - MS_ORDER.indexOf("M"), base = MS_BASE[who], step = MS_STEP[who];
+      MS_FIELDS.forEach(function(f){
+        var grow = (f[0] === "bust" || f[0] === "waist" || f[0] === "hip" || f[0] === "bicep" || f[0] === "neck") ? 1 : 0.25;
+        $$("ms-" + f[0]).value = fmt2(base[f[0]] + idx * step * grow, 2);
+      });
+    }
+    $$("ms-load").addEventListener("click", function(){
+      loadStd();
+      var out = $$("ms-result"); out.className = "result show";
+      out.innerHTML = verdict2("ok", "Standard size loaded: " + ($$("ms-std").value || "M") + " (" + $$("ms-who").value + ")", "These are starting numbers in Sewist's 4XS–9XL style — now overwrite any of them with the real person's measurements. A made-to-measure set beats a standard size every time.");
+    });
+    $$("ms-who").addEventListener("change", loadStd);
+    function readSet(){
+      var set = { name: $$("ms-name").value || "Measurements", who: $$("ms-who").value, values: {} };
+      MS_FIELDS.forEach(function(f){ set.values[f[0]] = parseFloat($$("ms-" + f[0]).value) || 0; });
+      return set;
+    }
+    var sessionSets = [];
+    $$("ms-save").addEventListener("click", function(){
+      var set = readSet(); sessionSets.push(set);
+      var out = $$("ms-result"); out.className = "result show";
+      out.innerHTML = verdict2("ok", sessionSets.length + " set" + (sessionSets.length === 1 ? "" : "s") + " in this session", sessionSets.map(function(s){ return "<b>" + s.name + "</b> (" + s.who + ") — bust " + s.values.bust + "″, waist " + s.values.waist + "″, hip " + s.values.hip + "″"; }).join("<br/>")) +
+        '<p class="note">Session only — download the set (.json) to keep it after this tab closes.</p>';
+    });
+    $$("ms-download").addEventListener("click", function(){
+      var set = readSet();
+      download((set.name || "measurements").replace(/[^A-Za-z0-9]+/g, "-").toLowerCase() + ".json", JSON.stringify(set, null, 2), "application/json");
+    });
+    $$("ms-import").addEventListener("change", function(){
+      var file = this.files[0]; if (!file) return;
+      file.text().then(function(t){
+        try {
+          var set = JSON.parse(t);
+          if (set.name) $$("ms-name").value = set.name;
+          if (set.who && MS_BASE[set.who]) $$("ms-who").value = set.who;
+          MS_FIELDS.forEach(function(f){ if (set.values && set.values[f[0]]) $$("ms-" + f[0]).value = set.values[f[0]]; });
+          var out = $$("ms-result"); out.className = "result show";
+          out.innerHTML = verdict2("ok", "Set imported: " + (set.name || "measurements"), "Check the numbers, then use them in the Generator.");
+        } catch (e) {
+          var out2 = $$("ms-result"); out2.className = "result show";
+          out2.innerHTML = verdict2("bad", "That file isn't a measurement set", "Import a .json file downloaded from this tool.");
+        }
+      });
+    });
+    $$("ms-apply").addEventListener("click", function(){
+      var set = readSet();
+      if (set.values.bust) $$("gen-bust").value = set.values.bust;
+      if (set.values.waist) $$("gen-waist").value = set.values.waist;
+      if (set.values.hip) $$("gen-hip").value = set.values.hip;
+      if (set.values.back) $$("gen-back").value = set.values.back;
+      if (set.values.bicep) $$("gen-bicep").value = set.values.bicep;
+      var out = $$("ms-result"); out.className = "result show";
+      out.innerHTML = verdict2("ok", "Applied to Tool 13", "Bust, waist, hip, back length and bicep are now in the Generator — scroll up to Tool 13 and draft.");
+      document.getElementById("generator").scrollIntoView({ behavior: "smooth" });
+    });
+
+    /* ================= 16 PROJECTS & TECH PACK ================= */
+    var PROJECTS = {
+      wrapdress: { title: "Wrap Dress", draft: [["Basic Bodice Block", "Start here — the wrap fronts and ties all hang off the bodice fit."], ["Basic Skirt Block", "Carry over: waist measurement + bodice waist dart total."], ["Waistband / Ties", "Carry over: full waist + wrap overlap (add 4″ per tie end)."], ["Neck Facing", "Carry over: the wrap front edge length — measure the drafted front, don't guess."]], fabric: 3.4, sew: ["Sew bodice darts and shoulder seams.", "Attach facings to the wrap fronts; understitch and press.", "Sew skirt panels; leave the tie opening in the right side seam.", "Join skirt to bodice at the waist, matching darts to seams.", "Thread the tie through the side opening; hem after hanging overnight."] },
+      shirt: { title: "Relaxed Shirt", draft: [["Basic Bodice / Shirt Body", "Start here — body first, everything else is measured off it."], ["Basic Sleeve Block", "Carry over: armhole seam length from the body draft."], ["Front Placket", "Carry over: centre-front length; button spacing = length ÷ buttons."], ["Collar + Stand", "Carry over: neckline seam length, front to back."], ["Sleeve Cuff + Placket", "Carry over: sleeve hem width and wrist measurement."]], fabric: 2.6, sew: ["Sew the sleeve plackets before setting sleeves.", "Join shoulders; attach collar stand, then collar.", "Set sleeves; sew side and sleeve seams in one pass.", "Attach cuffs; sew the front plackets and buttonholes.", "Hem, press, sew on buttons to match the holes."] },
+      hoodie: { title: "Raglan Hoodie", draft: [["T-Shirt / Body Block (relaxed)", "Start here with relaxed or oversized ease for knits."], ["Raglan Sleeve", "Carry over: neckline-to-armhole diagonal from the body."], ["Hood", "Carry over: total neckline length (front + back)."], ["Cuffs + Waistband", "Carry over: sleeve hem and body hem widths × 0.9 for ribbing."]], fabric: 2.8, sew: ["Sew raglan seams (front, then back).", "Build the hood; attach at the neckline, matching centre back.", "Add the kangaroo pocket before side seams if using one.", "Sew side seams; attach cuffs and waistband stretched slightly.", "Topstitch the hood edge and pocket; press seams toward the back."] },
+      tshirtoutfit: { title: "T-Shirt + Shorts", draft: [["T-Shirt", "Start here — knit block, neckband from the neck opening."], ["Basic Shorts Block", "Carry over: waist and hip from the same measurement set."], ["Waistband (elastic)", "Carry over: shorts waist − 2″ for the elastic length."]], fabric: 2.4, sew: ["T-shirt: shoulders, neckband, sleeves, side seams, hems.", "Shorts: in-seam pockets first if adding them.", "Sew shorts inseams, then the crotch curve in one pass.", "Attach the elastic waistband as a casing; hem the legs."] },
+      dress: { title: "Basic Dress", draft: [["Basic Bodice Block", "Start here — fit the bodice before anything hangs from it."], ["Basic Sleeve Block", "Carry over: armhole length + 1–1.5″ cap ease."], ["Basic Skirt Block", "Carry over: waist + dart totals so waist seams match exactly."], ["Neck + Armhole Facings", "Carry over: neckline and armhole curves from the finished bodice."]], fabric: 3.1, sew: ["Sew bodice darts, shoulders and facings.", "Set sleeves; sew bodice side seams.", "Sew skirt panels and the centre-back zip.", "Join bodice to skirt at the waist; check seams align.", "Hem after hanging 24 hours; final press."] }
+    };
+    var lastProject = null;
+    $$("pj-run").addEventListener("click", function(){
+      var key = $$("pj-type").value, p = PROJECTS[key], width = parseFloat($$("pj-width").value);
+      var yards = p.fabric * 60 / width;
+      lastProject = { p: p, yards: yards, width: width };
+      var html = "<h3>" + p.title + " — project plan</h3>";
+      html += "<p><b>Draft in this order:</b></p><ol class='steps'>" + p.draft.map(function(d){ return "<li><b>" + d[0] + "</b> — " + d[1] + "</li>"; }).join("") + "</ol>";
+      html += verdict2("ok", "Total fabric for the whole garment: " + fmt2(yards, 2) + " yards on " + width + "″ fabric", "Nastix Projects-style total for all components together, before nap / print matching. Add 10–15% for a directional print (Tool 7 lays out your exact pieces).");
+      html += "<p><b>Sew in this order:</b></p><ol class='steps'>" + p.sew.map(function(s){ return "<li>" + s + "</li>"; }).join("") + "</ol>";
+      var bust = $$("gen-bust").value, waist = $$("gen-waist").value, hip = $$("gen-hip").value;
+      html += '<div class="spec-sheet"><b>Specification sheet</b><br/>Garment: ' + ($$("pj-name").value || p.title) + '<br/>Size: ' + ($$("pj-size").value || "Made to measure") + ' — bust ' + bust + '″ · waist ' + waist + '″ · hip ' + hip + '″<br/>Fabric: ' + ($$("pj-fabric").value || "—") + ' · ' + fmt2(yards, 2) + ' yd @ ' + width + '″<br/>Notions: ' + ($$("pj-notions").value || "—") + '<br/>Pieces: ' + p.draft.map(function(d){ return d[0]; }).join(" · ") + '</div>';
+      html += '<p class="note">Download the same spec as a file with the "Download spec sheet" button — that is the text form of the tech pack Sewist ships with each pattern (their version adds a vector tech flat drawing).</p>';
+      var out = $$("pj-result"); out.className = "result show"; out.innerHTML = html;
+      buildSpec();
+    });
+    function buildSpec(){
+      var key = $$("pj-type").value, p = PROJECTS[key], width = parseFloat($$("pj-width").value);
+      var yards = lastProject && lastProject.p ? lastProject.yards : p.fabric * 60 / width;
+      lastSpec = "SPECIFICATION SHEET\n===================\nGarment: " + ($$("pj-name").value || p.title) + "\nProject: " + p.title + "\nSize: " + ($$("pj-size").value || "Made to measure") +
+        "\nMeasurements (in): bust " + $$("gen-bust").value + " · waist " + $$("gen-waist").value + " · hip " + $$("gen-hip").value + " · back-waist " + $$("gen-back").value +
+        "\nFabric: " + ($$("pj-fabric").value || "-") + " — " + fmt2(yards, 2) + " yd @ " + width + " in\nNotions: " + ($$("pj-notions").value || "-") +
+        "\n\nDRAFT IN ORDER:\n" + p.draft.map(function(d, i){ return (i + 1) + ". " + d[0] + " — " + d[1]; }).join("\n") +
+        "\n\nSEW IN ORDER:\n" + p.sew.map(function(s, i){ return (i + 1) + ". " + s; }).join("\n") +
+        "\n\nFit note: sew a toile first; verify print scale with the 1-inch test square.";
+    }
+    $$("pj-spec").addEventListener("click", function(){ buildSpec(); download("spec-sheet.txt", lastSpec, "text/plain"); });
+    runGenerator();
+    </script>
+  </body>
+</html>
